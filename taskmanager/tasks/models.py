@@ -3,10 +3,9 @@ from django.contrib.auth.models import User
 
 
 class Task(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
     description = models.TextField()
     PRIORITY_CHOICES = [
         ('ASAP', 'Asap'),
@@ -26,7 +25,14 @@ class Task(models.Model):
 
     @property
     def duration(self):
-        return (self.end_date - self.start_date).total_seconds() / 60
+        if self.start_date and self.end_date:
+            duration = self.end_date - self.start_date
+            if duration.total_seconds() < 0:
+                return 'Error: End date is earlier than start date'
+            else:
+                return duration.total_seconds() / 60
+        else:
+            return "Error: start_date and/or end_date is not set"
 
     def __str__(self):
         return self.name
