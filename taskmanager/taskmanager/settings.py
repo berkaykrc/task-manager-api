@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'csp.middleware.CSPMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -134,6 +135,18 @@ CACHES = {
         'KEY_PREFIX': 'taskmanager',
     }
 }
+
+# Content Security Policy
+
+CSP_IMG_SRC = ("'self'")
+
+CSP_STYLE_SRC = (
+    "'self' 'sha256-matwEc6givhWX0+jiSfM1+E5UMk8/UGLdl902bjFBmY=' 'sha256-e+Z0n8P0IwqIce2RMye3/p5TaNb2k/QdJT4urKCsrwk='"
+)
+CSP_SCRIPT_SRC = (
+    "'self' 'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik=' 'sha256-BOd3vm+dU9dDw7RuQPamTeJaSUNEfCXvwsv4xZxYK4w=' 'sha256-VYK2lpUxxHz7cBh98tZ9UwvOaIiLmMBJlWqOlQDKgN0='"
+)
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
