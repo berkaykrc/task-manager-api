@@ -13,9 +13,22 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import environ
 import os
+import sentry_sdk
 
 env = environ.Env()
 environ.Env.read_env()
+
+
+sentry_sdk.init(
+    dsn=env('SENTRY_DSN'),
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -144,9 +157,10 @@ CSP_STYLE_SRC = (
     "'self' 'sha256-matwEc6givhWX0+jiSfM1+E5UMk8/UGLdl902bjFBmY=' 'sha256-e+Z0n8P0IwqIce2RMye3/p5TaNb2k/QdJT4urKCsrwk='"
 )
 CSP_SCRIPT_SRC = (
-    "'self' 'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik=' 'sha256-BOd3vm+dU9dDw7RuQPamTeJaSUNEfCXvwsv4xZxYK4w=' 'sha256-VYK2lpUxxHz7cBh98tZ9UwvOaIiLmMBJlWqOlQDKgN0='"
+    "'self' 'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik=' 'sha256-BOd3vm+dU9dDw7RuQPamTeJaSUNEfCXvwsv4xZxYK4w=' 'sha256-VYK2lpUxxHz7cBh98tZ9UwvOaIiLmMBJlWqOlQDKgN0=' 'sha256-0vyMopxnvXRVbSyS6tLLYpzziWW7KHWri89lCKVi/oM='"
 )
 
+CSP_REPORT_URI = env('CSP_REPORT_URI')
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
