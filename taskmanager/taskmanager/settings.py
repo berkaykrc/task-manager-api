@@ -43,7 +43,7 @@ SECRET_KEY = 'django-insecure-*di2ix)@f3e9we4s1+hl=rntjy_-ce=@w5f5%tejzntks0v9tq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.24', 'localhost', env('SENTRY_DSN')]
 
 # Application definition
 
@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'profiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_filters'
 ]
 
 MIDDLEWARE = [
@@ -112,6 +113,7 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -154,10 +156,20 @@ CACHES = {
 CSP_IMG_SRC = ("'self'")
 
 CSP_STYLE_SRC = (
-    "'self' 'sha256-matwEc6givhWX0+jiSfM1+E5UMk8/UGLdl902bjFBmY=' 'sha256-e+Z0n8P0IwqIce2RMye3/p5TaNb2k/QdJT4urKCsrwk='"
+    "'self'",
+    "'sha256-matwEc6givhWX0+jiSfM1+E5UMk8/UGLdl902bjFBmY='",
+    "'sha256-e+Z0n8P0IwqIce2RMye3/p5TaNb2k/QdJT4urKCsrwk='",
+    "'sha256-WZ567ntT3BKIFaeoTtOOEdkkOJR5UidQJ809ufOE0zk='",
+    "'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs2Y='"
 )
 CSP_SCRIPT_SRC = (
-    "'self' 'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik=' 'sha256-BOd3vm+dU9dDw7RuQPamTeJaSUNEfCXvwsv4xZxYK4w=' 'sha256-VYK2lpUxxHz7cBh98tZ9UwvOaIiLmMBJlWqOlQDKgN0=' 'sha256-0vyMopxnvXRVbSyS6tLLYpzziWW7KHWri89lCKVi/oM='"
+    "'self' ",
+    "'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik=' ",
+    "'sha256-BOd3vm+dU9dDw7RuQPamTeJaSUNEfCXvwsv4xZxYK4w=' ",
+    "'sha256-VYK2lpUxxHz7cBh98tZ9UwvOaIiLmMBJlWqOlQDKgN0=' ",
+    "'sha256-0vyMopxnvXRVbSyS6tLLYpzziWW7KHWri89lCKVi/oM='",
+    "'sha256-uH4r5pLxV1jbRbWSnMotnmfYGmHndiZmgBOLJafhn+Y'",
+    "'sha256-W9N2OxpPp5CkQGg71CfJuL0v0XnbwNCGbWGYqyCr1iU='"
 )
 
 CSP_REPORT_URI = env('CSP_REPORT_URI')
