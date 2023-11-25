@@ -12,4 +12,4 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['user', 'image']
+        fields = ['user', 'image', 'tasks']
