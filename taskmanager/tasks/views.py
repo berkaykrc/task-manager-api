@@ -1,19 +1,24 @@
 from .serializers import TaskSerializer
 from .models import Task
-from rest_framework import viewsets, decorators, response
-from rest_framework.reverse import reverse
+from rest_framework import viewsets, decorators, response, filters,permissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.core.exceptions import ValidationError
-
-# Create your views here.
+from .permissions import IsCreatorOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsCreatorOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['priority', 'status']
+    search_fields = ['name', 'description', 'priority', 'status']
+    ordering_fields = ['priority', 'status']
+    ordering = ['priority',]
 
     @method_decorator(cache_page(60*60*2))
     def dispatch(self, *args, **kwargs):
@@ -35,3 +40,5 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.assigned.add(user)
         task.save()
         return response.Response({'status': 'task assigned'})
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
