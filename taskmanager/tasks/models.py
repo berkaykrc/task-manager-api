@@ -22,6 +22,7 @@ class Task(models.Model):
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default='TODO')
     assigned = models.ManyToManyField(User, related_name='tasks')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks', null=True)
 
     @property
     def duration(self):
@@ -30,7 +31,10 @@ class Task(models.Model):
             if duration.total_seconds() < 0:
                 return 'Error: End date is earlier than start date'
             else:
-                return duration.total_seconds() / 60
+                total_seconds = int(duration.total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                return f'{hours}h {minutes}m'
         else:
             return "Error: start_date and/or end_date is not set"
 
