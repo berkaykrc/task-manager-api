@@ -55,12 +55,42 @@ class TaskViewSetTestCase(TestCase):
                 'start_date': timezone.now(),
                 'end_date': timezone.now() + timezone.timedelta(days=1),
                 'assigned': [self.user.pk],
-                'creator': self.user.pk
+                'creator': self.user
             }
         )
         force_authenticate(request, user=self.user)
         response = view(request)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_task_validation_error(self):
+        view = TaskViewSet.as_view({'post': 'create'})
+        request = self.factory.post(
+            '/tasks/', {
+                'name': 'New Task',
+                'description': 'New Description',
+                'priority': 'ASAP',
+                'status': 'TODO',
+                'start_date': timezone.now(),
+                'end_date': timezone.now() - timezone.timedelta(days=1),
+                'assigned': [self.user.pk],
+                'creator': self.user
+            }
+        )
+        force_authenticate(request, user=self.user)
+        response = view(request)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+    def test_invalid_duratin_error(self):
+        view = TaskViewSet.as_view({'get': 'retrieve'})
+        self.task.start_date = timezone.now() + timezone.timedelta(days=1)
+        self.task.end_date = timezone.now()
+        self.task.save()
+        request = self.factory.get(f'/tasks/{self.task.pk}/')
+        force_authenticate(request, user=self.user)
+        response = view(request, pk=self.task.pk)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
 
 
 class TaskModelTest(TestCase):
