@@ -25,7 +25,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, *_args, **_kwargs):
         instance = self.get_object()
         try:
             instance.duration
@@ -36,7 +36,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @decorators.action(detail=True, methods=['post'])
     def assign_task(self, request, pk=None):
-        task = self.get_object()
+        task = Task.objects.get(pk=pk)
         user = request.user
         task.assigned.add(user)
         task.save()
