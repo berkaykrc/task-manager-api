@@ -22,7 +22,7 @@ class Task(models.Model):
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default='TODO')
     assigned = models.ManyToManyField(User, related_name='tasks')
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks', null=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
 
     @property
     def duration(self):
