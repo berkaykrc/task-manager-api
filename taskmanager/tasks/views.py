@@ -21,7 +21,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering_fields = ['priority', 'status']
     ordering = ['priority',]
 
-    @method_decorator(cache_page(60*60*2))
+    @method_decorator(cache_page(60))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
