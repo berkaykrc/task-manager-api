@@ -10,7 +10,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Task
-        fields = ['id', 'creator', 'name', 'description', 'assigned',
+        fields = ['url', 'id', 'creator', 'name', 'description', 'assigned',
                   'start_date', 'end_date', 'priority', 'status', 'duration']
 
     def validate(self, data):
