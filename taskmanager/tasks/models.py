@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib import admin
 from django.contrib.auth.models import User
 
 
@@ -25,6 +26,11 @@ class Task(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
 
     @property
+    @admin.display(
+        boolean=True,
+        ordering='start_date',
+        description='Is the task overdue?',
+    )
     def duration(self):
         if self.start_date and self.end_date:
             duration = self.end_date - self.start_date
