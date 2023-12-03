@@ -43,7 +43,15 @@ SECRET_KEY = 'django-insecure-*di2ix)@f3e9we4s1+hl=rntjy_-ce=@w5f5%tejzntks0v9tq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.24', 'localhost', env('SENTRY_DSN')]
+ALLOWED_HOSTS = ['192.168.1.24', 'localhost', env('SENTRY_DSN'), '127.0.0.1']
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://localhost:8080",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:8080",
+    
+]
 
 # Application definition
 
@@ -58,13 +66,15 @@ INSTALLED_APPS = [
     'profiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'django_filters'
+    'django_filters',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'csp.middleware.CSPMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
