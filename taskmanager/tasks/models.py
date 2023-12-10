@@ -1,12 +1,23 @@
 from django.db import models
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 
+
+def validate_start_date(value):
+    if value < timezone.now():
+        raise ValidationError('Start date cannot be in the past')
+
+
+def validate_end_date(value):
+    if value < timezone.now():
+        raise ValidationError('End date cannot be in the past')
 
 class Task(models.Model):
     name = models.CharField(max_length=255)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date = models.DateTimeField(validators=[validate_start_date, validate_dates])
+    end_date = models.DateTimeField(validators=[validate_end_date, validate_dates])
     description = models.TextField()
     PRIORITY_CHOICES = [
         ('ASAP', 'Asap'),
@@ -23,7 +34,8 @@ class Task(models.Model):
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default='TODO')
     assigned = models.ManyToManyField(User, related_name='tasks')
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
+    creator = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='created_tasks')
 
     @property
     @admin.display(
