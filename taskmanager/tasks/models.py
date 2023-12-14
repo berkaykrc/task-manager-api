@@ -14,10 +14,11 @@ def validate_end_date(value):
     if value < timezone.now():
         raise ValidationError('End date cannot be in the past')
 
+
 class Task(models.Model):
     name = models.CharField(max_length=255)
-    start_date = models.DateTimeField(validators=[validate_start_date, validate_dates])
-    end_date = models.DateTimeField(validators=[validate_end_date, validate_dates])
+    start_date = models.DateTimeField(validators=[validate_start_date,])
+    end_date = models.DateTimeField(validators=[validate_end_date,])
     description = models.TextField()
     PRIORITY_CHOICES = [
         ('ASAP', 'Asap'),
@@ -36,6 +37,18 @@ class Task(models.Model):
     assigned = models.ManyToManyField(User, related_name='tasks')
     creator = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='created_tasks')
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(start_date__lte=models.F('end_date')),
+                name='start_date_lte_end_date'
+            ),
+            models.CheckConstraint(
+                check=models.Q(end_date__gte=F('start_date')),
+                name='end_date_gte_start_date'
+            ),
+        ]
 
     @property
     @admin.display(
