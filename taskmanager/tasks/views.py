@@ -1,6 +1,6 @@
 from .serializers import TaskSerializer
 from .models import Task
-from rest_framework import viewsets, decorators, response, filters, permissions
+from rest_framework import viewsets, decorators, response, filters
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -43,4 +43,4 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response.Response({'status': 'task assigned'})
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+            serializer.save(creator=self.request.user)
