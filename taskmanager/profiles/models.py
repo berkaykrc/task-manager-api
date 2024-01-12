@@ -21,6 +21,7 @@ class Profile(models.Model):
         User, on_delete=models.CASCADE, related_name='profile')
     image = models.ImageField(upload_to='profile_pics', validators=[
                               validate_image_file_extension])
+    expo_push_token = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return self.user.username
