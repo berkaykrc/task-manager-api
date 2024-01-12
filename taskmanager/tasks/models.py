@@ -17,6 +17,7 @@ def validate_end_date(value):
 
 class Task(models.Model):
     name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=timezone.now)
     start_date = models.DateTimeField(validators=[validate_start_date,])
     end_date = models.DateTimeField(validators=[validate_end_date,])
     description = models.TextField()
@@ -45,7 +46,7 @@ class Task(models.Model):
                 name='start_date_lte_end_date'
             ),
             models.CheckConstraint(
-                check=models.Q(end_date__gte=F('start_date')),
+                check=models.Q(end_date__gte=models.F('start_date')),
                 name='end_date_gte_start_date'
             ),
         ]
@@ -64,7 +65,7 @@ class Task(models.Model):
             else:
                 total_seconds = int(duration.total_seconds())
                 hours, remainder = divmod(total_seconds, 3600)
-                minutes, seconds = divmod(remainder, 60)
+                minutes, _ = divmod(remainder, 60)
                 return f'{hours}h {minutes}m'
         else:
             return "Error: start_date and/or end_date is not set"
