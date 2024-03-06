@@ -44,7 +44,7 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.24", "localhost", env("SENTRY_DSN"), "127.0.0.1"]
+ALLOWED_HOSTS = ["192.168.1.24", "localhost", env("SENTRY_DSN"), "127.0.0.1", "taskmanager"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
@@ -56,6 +56,7 @@ CORS_ALLOWED_ORIGINS = [
 INTERNAL_IPS = [
     "localhost",
     "127.0.0.1",
+    "taskmanager" # docker service name
 ]
 
 # Application definition
