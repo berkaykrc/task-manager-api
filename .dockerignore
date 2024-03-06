@@ -1,0 +1,39 @@
+# Ignore Python cache files
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Ignore pip log
+pip-log.txt
+
+# Ignore Python virtual environments
+**/venv/
+**/.venv/
+**/ENV/
+
+# Ignore pip egg-info directories and eggs
+**/*.egg-info/
+**/*.egg
+
+# Ignore Python distribution packages
+**/dist/
+**/build/
+**/develop-eggs/
+**/downloads/
+**/eggs/
+**/.eggs/
+**/lib/
+**/lib64/
+**/parts/
+**/sdist/
+**/var/
+**/wheels/
+**/.Python
+**/share/python-wheels/
+**/*.so
+**/*.pyd
+**/.Python
+**/*.egg
+**/*.egg-info/
+.installed.cfg
