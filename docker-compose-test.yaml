@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python manage.py runserver
+    command: python manage.py test --keepdb
     env_file:
       - taskmanager/taskmanager/.env
     depends_on:
@@ -19,15 +19,6 @@ services:
 
   taskmanager-redis:
     image: redis:latest
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - nginx_config:/etc/nginx/conf.d
-    depends_on:
-      - taskmanager
 
 volumes:
   postgres_data:
-  ngnix_config:
