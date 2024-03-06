@@ -21,8 +21,6 @@ environ.Env.read_env()
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "taskmanager.settings")
 
 app = Celery("taskmanager", backend=env("REDIS_URL"), broker=env("REDIS_URL"))
-print(env("REDIS_URL"))
-print(app)
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 
