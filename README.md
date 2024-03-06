@@ -14,7 +14,7 @@ These instructions will get you a copy of the project up and running on your loc
 - Celery 5.0+
 - Redis 6.0+
 
-### Installation
+### Local Setup
 
 1. Clone the repository:
 
@@ -31,8 +31,8 @@ cd taskmanager
 3. Create a virtual environment and activate it:
 
 ```sh
-python3 -m venv env
-source env/bin/activate
+python3 -m venv venv
+source .venv/bin/activate
 ```
 
 4. Install the required packages:
@@ -71,10 +71,35 @@ To run the tests, use:
 python manage.py test
 ```
 
+## Docker
+
+This project uses Docker to create a reproducible environment that's easy to set up on any machine. The `Dockerfile` and `compose.yaml` files are used to define this environment.
+
+### Dockerfile
+
+The `Dockerfile` defines the environment for a single Docker container. It specifies the base image, the dependencies, and the commands to run when the container starts. It uses the official Python 3.8 slim-buster image as a base image, sets some environment variables, installs the Python dependencies listed in the `requirements.txt` file, and runs the Django application.
+
+### compose.yaml
+
+The `compose.yaml` file defines the services, networks, and volumes for a Docker application. It's used to run multiple Docker containers as a single service. In this project, the `compose.yaml` file defines the services for the Django application, PostgreSQL database, Nginx and, Redis.
+
+To start the Docker application, run the following command in the same directory as the `compose.yaml` file:
+
+```sh
+docker-compose up
+```
+
 ## Built With
 
-- [Django](https://www.djangoproject.com/) - The web framework used
-- [PostgreSQL](https://www.postgresql.org/) - The database used
-- [Celery](https://docs.celeryproject.org/en/stable/) - Used for task scheduling
-- [Redis](https://redis.io/) - The message broker for Celery
-- [Nginx](https://nginx.org/) - Used as a web server and reverse proxy
+- [Django](https://www.djangoproject.com/) - The web framework used for building the application. It provides tools and functionalities for building secure and scalable web applications.
+- [PostgreSQL](https://www.postgresql.org/) - The relational database used for storing application data. It's known for its performance and standards compliance.
+- [Celery](https://docs.celeryproject.org/en/stable/) - Used for task scheduling and processing. It allows the application to perform tasks asynchronously and schedule recurring tasks.
+- [Redis](https://redis.io/) - Used as a message broker for Celery and as a cache for the Django application. It provides fast in-memory data storage.
+- [Nginx](https://nginx.org/) - Used as a web server and reverse proxy. It handles HTTP requests and serves static files.
+- [django-csp](https://pypi.org/project/django-csp/) - Used for adding Content Security Policy headers to the Django application. It helps to prevent cross-site scripting (XSS) attacks.
+- [Simple JWT](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/) - A JSON Web Token authentication plugin for the Django Rest Framework. It's used in this project to handle user authentication. When a user logs in, they receive a JSON Web Token that they can use to authenticate their requests.
+- [django-filter](https://django-filter.readthedocs.io/en/stable/) - Used for creating filters in the Django application. It provides a simple way to filter querysets based on user input.
+- [django-debug-toolbar](https://django-debug-toolbar.readthedocs.io/en/latest/) - Used for debugging the Django application. It provides a set of panels displaying various debug information.
+- [django-cors-headers](https://pypi.org/project/django-cors-headers/) - Used for handling Cross-Origin Resource Sharing (CORS) headers in the Django application. It allows the application to control which domains can access the API.
+- [psycopg2-binary](https://pypi.org/project/psycopg2-binary/) - Used as a PostgreSQL adapter for Python. It allows the Django application to connect to the PostgreSQL database.
+- [django-redis](https://django-redis.readthedocs.io/en/latest/) - Used as a Redis cache backend for Django. It allows the Django application to use Redis as a cache.
