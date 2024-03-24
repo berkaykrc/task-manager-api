@@ -93,7 +93,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         try:
             instance.duration
         except ValidationError as e:
-            return response.Response({"error": str(e)}, status=400)
+            return response.Response({"error": "Invalid duration"}, status=400)
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
 
