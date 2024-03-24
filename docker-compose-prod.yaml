@@ -1,0 +1,33 @@
+services:
+  taskmanager:
+    build: .
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - taskmanager/taskmanager/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgresql
+      - taskmanager-redis
+
+  postgresql:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - taskmanager/taskmanager/.env
+
+  taskmanager-redis:
+    image: redis:latest
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - nginx_config:/etc/nginx/conf.d
+    depends_on:
+      - taskmanager
+
+volumes:
+  postgres_data:
+  nginx_config:
