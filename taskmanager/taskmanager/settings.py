@@ -44,7 +44,13 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.24", "localhost", env("SENTRY_DSN"), "127.0.0.1", "taskmanager"]
+ALLOWED_HOSTS = [
+    "192.168.1.24",
+    "localhost",
+    env("SENTRY_DSN"),
+    "127.0.0.1",
+    "taskmanager",
+]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
@@ -53,11 +59,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
 ]
 
-INTERNAL_IPS = [
-    "localhost",
-    "127.0.0.1",
-    "taskmanager" # docker service name
-]
+INTERNAL_IPS = ["localhost", "127.0.0.1", "taskmanager"]  # docker service name
 
 # Application definition
 
@@ -75,6 +77,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "debug_toolbar",
+    "graphene_django",
 ]
 
 MIDDLEWARE = [
@@ -125,11 +128,11 @@ WSGI_APPLICATION = "taskmanager.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": env("DB_HOST"),
-        "PORT": env("DB_PORT"),
+        "NAME": env("POSTGRES_DB"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
+        "HOST": env("POSTGRES_HOST"),
+        "PORT": env("POSTGRES_PORT"),
     },
 }
 
@@ -142,6 +145,17 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
 }
 
+GRAPHENE = {
+    "SCHEMA": "taskmanager.schema.schema",
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
+}
+
+AUTHENTICATION_BACKENDS = [
+    "graphql_jwt.backends.JSONWebTokenBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -180,19 +194,18 @@ CSP_IMG_SRC = "'self'"
 
 CSP_STYLE_SRC = (
     "'self'",
-    "'sha256-matwEc6givhWX0+jiSfM1+E5UMk8/UGLdl902bjFBmY='",
-    "'sha256-e+Z0n8P0IwqIce2RMye3/p5TaNb2k/QdJT4urKCsrwk='",
-    "'sha256-WZ567ntT3BKIFaeoTtOOEdkkOJR5UidQJ809ufOE0zk='",
-    "'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs2Y='",
+    "'unsafe-inline'",
+    "https://cdn.jsdelivr.net",
 )
 CSP_SCRIPT_SRC = (
     "'self' ",
-    "'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik=' ",
-    "'sha256-BOd3vm+dU9dDw7RuQPamTeJaSUNEfCXvwsv4xZxYK4w=' ",
-    "'sha256-VYK2lpUxxHz7cBh98tZ9UwvOaIiLmMBJlWqOlQDKgN0=' ",
-    "'sha256-0vyMopxnvXRVbSyS6tLLYpzziWW7KHWri89lCKVi/oM='",
-    "'sha256-uH4r5pLxV1jbRbWSnMotnmfYGmHndiZmgBOLJafhn+Y'",
-    "'sha256-W9N2OxpPp5CkQGg71CfJuL0v0XnbwNCGbWGYqyCr1iU='",
+    "'unsafe-inline'",
+    "https://cdn.jsdelivr.net",
+)
+
+CSP_FONT_SRC = (
+    "'self'",
+    "https://cdn.jsdelivr.net",
 )
 
 CSP_REPORT_URI = env("CSP_REPORT_URI")
