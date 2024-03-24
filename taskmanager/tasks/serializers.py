@@ -41,7 +41,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
 
         Attributes:
             model (class): The model class that the serializer is based on.
-            fields (list): The list of fields to include in the serialized representation of the model.
+            fields (list): The list of fields to include in serialized representation of the model.
         """
 
         model = Task
