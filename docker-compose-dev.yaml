@@ -1,11 +1,14 @@
 services:
   taskmanager:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python manage.py runserver
+    image: python:3.8-slim-buster
+    volumes:
+      - ./taskmanager:/usr/src/app
+      - ./requirements.txt:/requirements.txt
+    command: bash -c "pip install -r /requirements.txt && python /usr/src/app/manage.py migrate && python /usr/src/app/manage.py makemigrations && python /usr/src/app/manage.py runserver 0.0.0.0:8000"
     env_file:
       - taskmanager/taskmanager/.env
+    ports:
+      - "8000:8000"
     depends_on:
       - postgresql
       - taskmanager-redis
