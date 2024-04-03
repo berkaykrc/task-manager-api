@@ -7,6 +7,7 @@ Attributes:
     create_user_profile (function): Create a profile when a new user is created.
     save_user_profile (function): Save the profile when the user is saved.
 """
+
 import os
 
 from django.contrib.auth import get_user_model
