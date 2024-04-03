@@ -59,6 +59,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
 ]
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 INTERNAL_IPS = ["localhost", "127.0.0.1", "taskmanager"]  # docker service name
 
 # Application definition
@@ -72,12 +74,14 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "tasks.apps.TasksConfig",
     "profiles",
+    "projects",
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
     "corsheaders",
     "debug_toolbar",
     "graphene_django",
+    "dj_rest_auth",
 ]
 
 MIDDLEWARE = [
@@ -137,12 +141,27 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/day",
+        "user": "1000/day",
+    },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "PAGE_SIZE": 10,
+}
+
+REST_AUTH = {
+    "TOKEN_MODEL": None,
+    "USE_JWT": True,
+    "JWT_AUTH_COOKIE": "taskmanager-jwt",
+    "JWT_AUTH_REFRESH_COOKIE": "taskmanager-refresh-token",
 }
 
 GRAPHENE = {

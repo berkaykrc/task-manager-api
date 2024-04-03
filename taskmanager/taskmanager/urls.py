@@ -16,23 +16,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('profiles/', include('profiles.urls'))
 """
+
 import debug_toolbar
+from dj_rest_auth.views import PasswordResetConfirmView, PasswordResetView
 from django.contrib import admin
 from django.urls import include, path
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from graphene_django.views import GraphQLView
+from profiles.views import LoginView, RegisterView
 
 from .views import APIRootView
 
 urlpatterns = [
     path("", APIRootView.as_view(), name="api-root"),
     path("admin/", admin.site.urls),
+    path("login/", LoginView.as_view(), name="login"),
+    path("register/", RegisterView.as_view(), name="register"),
     path("tasks/", include("tasks.urls")),
     path("profiles/", include("profiles.urls")),
-    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/token/refresh", TokenRefreshView.as_view(), name="token_refresh"),
-    path("api-auth/", include("rest_framework.urls", namespace="api-auth")),
+    path("projects/", include("projects.urls")),
+    path('password/reset/',
+         PasswordResetView.as_view(), name='password_reset'),
+    path('password-reset-confirm/<uidb64>/<token>/',
+         PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path("api-auth/", include("dj_rest_auth.urls")),
     path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
     path("__debug__/", include(debug_toolbar.urls)),
 ]

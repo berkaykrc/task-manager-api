@@ -1,8 +1,11 @@
 """Profiles views."""
-from django.contrib.auth import authenticate, get_user_model, login
+
+from dj_rest_auth.views import LoginView as DjRestAuthLoginView
+from django.contrib.auth import get_user_model
+from profiles.permissions import IsUserOrReadOnly
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -22,7 +25,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsUserOrReadOnly]
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -74,37 +77,5 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
-    """
-    API view for user login.
-    """
-
-    def post(self, request):
-        """
-        Handle POST request for user login.
-
-        Parameters:
-        - request: The HTTP request object.
-
-        Returns:
-        - If the user is authenticated, returns a success message.
-        - If the user is not authenticated, returns a 401 Unauthorized response.
-        """
-        try:
-            username = request.data["username"]
-            password = request.data["password"]
-        except KeyError:
-            return Response(
-                {"error": "Username and password are required fields"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return Response(
-                {
-                    "message": "User logged in successfully",
-                }
-            )
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+class LoginView(DjRestAuthLoginView):
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
