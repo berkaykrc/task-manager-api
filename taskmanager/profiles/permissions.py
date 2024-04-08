@@ -31,3 +31,28 @@ class IsUserOrReadOnly(permissions.BasePermission):
 
         # Write permissions are only allowed to the user of the object.
         return obj.user == request.user
+
+
+class IsAdminUserOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow admin users to edit objects.
+    """
+
+    def has_permission(self, request, view):
+        """
+        Check if the user has permission to perform the requested action on the view.
+
+        Args:
+            request (HttpRequest): The request object.
+            view (View): The view object.
+
+        Returns:
+            bool: True if the user has permission, False otherwise.
+        """
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowed to admin users.
+        return request.user and request.user.is_staff
