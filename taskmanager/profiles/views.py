@@ -2,8 +2,11 @@
 
 from dj_rest_auth.views import LoginView as DjRestAuthLoginView
 from django.contrib.auth import get_user_model
-from profiles.permissions import IsUserOrReadOnly
+from django.contrib.auth.models import Group
+from profiles.permissions import IsAdminUserOrReadOnly, IsUserOrReadOnly
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
@@ -11,7 +14,12 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Profile
-from .serializers import ProfileSerializer, UserRegistrationSerializer, UserSerializer
+from .serializers import (
+    GroupSerializer,
+    ProfileSerializer,
+    UserRegistrationSerializer,
+    UserSerializer,
+)
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -22,10 +30,34 @@ class ProfileViewSet(viewsets.ModelViewSet):
     Requires authentication and permission to access.
     """
 
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.all().order_by('id')
     serializer_class = ProfileSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsUserOrReadOnly]
+    permission_classes = [IsUserOrReadOnly, IsAuthenticated]
+
+    @action(detail=True, methods=['patch'])
+    def set_expo_push_token(self, request):
+        """
+        Set the Expo push token for a profile.
+
+        Args:
+            request: HTTP request.
+            pk: The profile ID.
+
+        Returns:
+            Response object.
+        """
+        profile = self.get_object()
+        expo_push_token = request.data.get('expo_push_token')
+
+        if not expo_push_token:
+            return Response({'error': 'Expo push token is required.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        profile.expo_push_token = expo_push_token
+        profile.save()
+
+        return Response({'message': 'Expo push token set successfully.'})
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -35,8 +67,34 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     Inherits from `viewsets.ReadOnlyModelViewSet` and provides read-only actions for users.
     """
 
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.all().order_by('id')
     serializer_class = UserSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdminUserOrReadOnly]
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows groups to be viewed or edited.
+
+    Inherits from `viewsets.ModelViewSet` and provides CRUD actions for groups.
+    """
+
+    queryset = Group.objects.all().order_by('id')
+    serializer_class = GroupSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
 
 
 class RegisterView(APIView):
@@ -78,4 +136,15 @@ class RegisterView(APIView):
 
 
 class LoginView(DjRestAuthLoginView):
+    """
+    A view for handling user login.
+
+    This view extends the `DjRestAuthLoginView` class and adds additional functionality throttling
+    the login requests using the `AnonRateThrottle` and `UserRateThrottle` classes.
+
+    Throttling helps to prevent abuse and protect the server from excessive login attempts.
+
+    Attributes:
+        throttle_classes (list): A list of throttle classes to apply to the view.
+    """
     throttle_classes = [AnonRateThrottle, UserRateThrottle]

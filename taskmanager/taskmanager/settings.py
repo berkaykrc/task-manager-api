@@ -99,6 +99,7 @@ MIDDLEWARE = [
     "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
+
 ROOT_URLCONF = "taskmanager.urls"
 
 LOGIN_REDIRECT_URL = "api-root"
@@ -155,6 +156,7 @@ REST_FRAMEWORK = {
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "PAGE_SIZE": 10,
+    "ordering": "created",
 }
 
 REST_AUTH = {
