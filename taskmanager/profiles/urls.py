@@ -11,10 +11,11 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import ProfileViewSet, UserViewSet
+from .views import GroupViewSet, ProfileViewSet, UserViewSet
 
 router = DefaultRouter()
 router.register(r"users", UserViewSet)
+router.register(r"groups", GroupViewSet)
 router.register(r"", ProfileViewSet)
 
 urlpatterns = [
