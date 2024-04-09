@@ -608,7 +608,7 @@ class LoginTestCase(APITestCase):
         self.user.delete()
 
 
-class UserViweSetTestCase(APITestCase):
+class UserViewSetTestCase(APITestCase):
     """
     Test case for the UserViewSet class.
     """
@@ -645,9 +645,9 @@ class UserViweSetTestCase(APITestCase):
         and asserts that the response status code is 200 (OK).
         It also asserts that the response data contains the 'results'.
         """
-        response = self.client.get("profiles/users/")
+        response = self.client.get("/profiles/users/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("result", response.data)
+        self.assertIn("results", response.data)
         self.assertTrue("count" in response.data)
         self.assertTrue("next" in response.data)
         self.assertTrue("previous" in response.data)
@@ -660,7 +660,7 @@ class UserViweSetTestCase(APITestCase):
         and asserts that the response status code is 200 (OK).
         It also asserts that the response data contains the user's username.
         """
-        response = self.client.get(f"profiles/users/{self.user.pk}/")
+        response = self.client.get(f"/profiles/users/{self.user.pk}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], self.user.username)
 
