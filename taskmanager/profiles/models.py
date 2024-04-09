@@ -55,7 +55,27 @@ class Profile(models.Model):
     expo_push_token = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return self.user.get_username()
+        return f"{get_user_model().get_username()} Profile"
+
+    def delete(self, *args, **kwargs):
+        """
+        Delete the profile.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            None
+        """
+        storage, path = self.image.storage, self.image.path
+        super(Profile, self).delete(*args, **kwargs)
+        try:
+            storage.delete(path)
+        except FileNotFoundError:
+            print(f"File {path} not found.")
+        except Exception:
+            print("Error deleting file")
 
 
 @receiver(post_save, sender=get_user_model())

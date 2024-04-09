@@ -113,6 +113,16 @@ class UserSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def get_image(self, obj):
+        """
+        Return the URL of the user's image.
+
+        Args:
+            obj(User): The user object to get the image URL for.
+
+        Returns:
+            str: The URL of the user's image.
+
+        """
         return obj.profile.image.url if obj.profile and obj.profile.image else None
 
 
