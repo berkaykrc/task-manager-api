@@ -15,19 +15,19 @@ To run the tests:
 import os
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
 from django.urls import reverse
 from PIL import Image
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 
 from .models import Profile
 
 User = get_user_model()
 
 
-class ProfileViewSetTestCase(TestCase):
+class ProfileViewSetTestCase(APITestCase):
     """
     Profile view set test case.
 
@@ -44,7 +44,6 @@ class ProfileViewSetTestCase(TestCase):
     """
 
     def setUp(self):
-        self.client = APIClient()
         self.user = User.objects.create_user(
             username="testuser", password="testpassword"
         )
@@ -78,7 +77,6 @@ class ProfileViewSetTestCase(TestCase):
 
         self.client.logout()
         response = self.client.get("/profiles/")
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_profiles(self):
@@ -153,6 +151,76 @@ class ProfileViewSetTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Profile.objects.filter(user=self.user).exists())
 
+    def test_can_update_a_profile_with_partial_data(self):
+        """
+        Tests updating a profile with partial data.
+
+        This method tests updating a profile with partial data.
+
+        Args:
+            self: The object itself.
+
+        Returns:
+            None.
+        """
+        data = {
+            "expo_push_token": "test_token"
+        }
+        response = self.client.patch(
+            f"/profiles/{self.user.profile.id}/", data, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Profile.objects.filter(
+            user=self.user, expo_push_token="test_token").exists())
+
+    def test_update_profile_with_invalid_data(self):
+        """
+        Tests updating a profile with invalid data.
+
+        This method tests updating a profile with invalid data.
+
+        Args:
+            self: The object itself.
+
+        Returns:
+            None.
+        """
+        data = {
+            "user": reverse("user-detail", kwargs={"pk": self.user.pk}),
+            "image": "test_image.jpeg",
+            "expo_push_token": "test_token"
+        }
+        response = self.client.put(
+            f"/profiles/{self.user.profile.id}/", data, format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_cannot_update_other_user_profile(self):
+        """
+        Tests that a user cannot update another user's profile.
+
+        This method tests that a user cannot update another user's profile
+        and receives a forbidden response.
+
+        Args:
+            self: The object itself.
+
+        Returns:
+            None.
+        """
+        other_user = User.objects.create_user(
+            username="otheruser", password="testpassword"
+        )
+        data = {
+            "user": reverse("user-detail", kwargs={"pk": other_user.pk}),
+            "image": self.image,
+            "expo_push_token": "test_token"
+        }
+        response = self.client.put(
+            f"/profiles/{other_user.profile.id}/", data, format='multipart'
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_can_delete_a_profile(self):
         """
         Tests deleting a profile.
@@ -211,7 +279,100 @@ class ProfileViewSetTestCase(TestCase):
         self.assertTrue("previous" in response.data)
 
 
-class UserRegistrationTestCase(TestCase):
+class GroupViewSetTestCase(APITestCase):
+    """
+    Test case for the GroupViewSet class.
+
+    This test case class contains test methods to verify the functionality of GroupViewSet class.
+    It includes tests for retrieving, updating, and deleting a group.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create(
+            username="testuser", password="testuserpassword", is_staff=True)
+        self.group = Group.objects.create(name="Test Group")
+        self.user.groups.add(self.group)
+        self.url = reverse('group-detail', kwargs={'pk': self.group.pk})
+        self.client.force_authenticate(user=self.user)
+
+    def test_authorization_is_enforced(self):
+        """
+        Tests authorization enforcement.
+
+        This method tests authorization enforcement.
+
+        Args:
+            self: The object itself.
+
+        Returns:
+            None.
+        """
+
+        self.client.logout()
+        response = self.client.get("/profiles/groups/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_pagination(self):
+        """
+        Tests pagination.
+
+        This method tests pagination.
+
+        Args:
+            self: The object itself.
+
+        Returns:
+            None.
+        """
+        response = self.client.get("/profiles/groups/?page=1")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue("results" in response.data)
+        self.assertTrue("count" in response.data)
+        self.assertTrue("next" in response.data)
+        self.assertTrue("previous" in response.data)
+
+    def test_only_admin_get_group(self):
+        """
+        Test case for the permissions of the GroupViewSet class.
+
+        This test case method verifies that only admin users can access the GroupViewSet
+        """
+        response = self.client.get("/profiles/groups/")
+        self.assertIn("name", response.data['results'][0])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_group(self):
+        """
+        Test case for updating a group.
+
+        This test case method tests the functionality of updating a group by sending a PATCH request
+        to the specified URL with the update data.
+
+        It asserts that the response status code is 200 (OK) 
+        and checks if the group's name has been successfully updated.
+        """
+        update_data = {'name': 'Updated Test Group'}
+        response = self.client.patch(self.url, update_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.group.refresh_from_db()
+        self.assertEqual(self.group.name, 'Updated Test Group')
+
+    def test_delete_group(self):
+        """
+        Test case to verify the deletion of a group.
+
+        This test case method sends a DELETE request to the specified URL 
+        and asserts that the response status code is 204 (NO CONTENT).
+        It also asserts that the Group.DoesNotExist exception
+        is raised when attempting to retrieve the group from the database.
+        """
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertRaises(Group.DoesNotExist,
+                          Group.objects.get, pk=self.group.pk)
+
+
+class UserRegistrationTestCase(APITestCase):
     """
     User registration test case.
 
@@ -227,7 +388,6 @@ class UserRegistrationTestCase(TestCase):
     """
 
     def setUp(self):
-        self.client = APIClient()
         self.user = User.objects.create_user(
             username="testuser", password="testpassword", email="testuser@example.com"
         )
@@ -344,7 +504,7 @@ class UserRegistrationTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class LoginTestCase(TestCase):
+class LoginTestCase(APITestCase):
     """
     Login test case.
 
@@ -360,7 +520,6 @@ class LoginTestCase(TestCase):
     """
 
     def setUp(self):
-        self.client = APIClient()
         self.user = User.objects.create_user(
             username="testuser", password="testpassword"
         )
@@ -444,3 +603,68 @@ class LoginTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse("access" in response.data)
+
+    def tearDown(self):
+        self.user.delete()
+
+
+class UserViweSetTestCase(APITestCase):
+    """
+    Test case for the UserViewSet class.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword", is_staff=True
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_authorization_is_enforced(self):
+        """
+        Tests authorization enforcement.
+
+        This method tests authorization enforcement.
+
+        Args:
+            self: The object itself.
+
+        Returns:
+            None.
+        """
+
+        self.client.logout()
+        self.client.force_authenticate(user=None)
+        response = self.client.get("/profiles/users/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_users_list(self):
+        """
+        Test case for listing users.
+
+        This test case method sends a GET request to the specified URL
+        and asserts that the response status code is 200 (OK).
+        It also asserts that the response data contains the 'results'.
+        """
+        response = self.client.get("profiles/users/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("result", response.data)
+        self.assertTrue("count" in response.data)
+        self.assertTrue("next" in response.data)
+        self.assertTrue("previous" in response.data)
+
+    def test_get_user(self):
+        """
+        Test case for retrieving a user.
+
+        This test case method sends a GET request to the specified URL
+        and asserts that the response status code is 200 (OK).
+        It also asserts that the response data contains the user's username.
+        """
+        response = self.client.get(f"profiles/users/{self.user.pk}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], self.user.username)
+
+    def tearDown(self):
+        self.user.delete()
+        self.client.logout()
+        self.client.force_authenticate(user=None)
