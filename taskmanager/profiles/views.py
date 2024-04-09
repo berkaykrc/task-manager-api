@@ -70,7 +70,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = get_user_model().objects.all().order_by('id')
     serializer_class = UserSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdminUserOrReadOnly]
+    permission_classes = [IsAdminUserOrReadOnly, IsAuthenticated]
 
 
 class GroupViewSet(viewsets.ModelViewSet):
