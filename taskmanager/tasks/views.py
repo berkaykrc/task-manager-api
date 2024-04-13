@@ -16,6 +16,7 @@ Attributes:
     ordering (list): The default ordering for tasks.
 """
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -98,22 +99,25 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data)
 
     @decorators.action(detail=True, methods=["post"])
-    def assign_task(self, request, pk=None):
+    def assign_task(self, request, user_id=None):
         """
         Assigns a task to a user.
 
         Args:
             request (HttpRequest): The request object.
-            pk (int): The primary key of the task.
+            user_id (int): The ID of the user to assign the task to.
 
         Returns:
             HttpResponse: The response indicating the task has been assigned.
         """
-        task = Task.objects.get(pk=pk)
-        user = request.user
+        task = self.get_object()
+        try:
+            user = get_user_model().objects.get(id=user_id)
+        except get_user_model().DoesNotExist:
+            return response.Response({"error": "User not found"}, status=404)
         task.assigned.add(user)
         task.save()
-        return response.Response({"status": "task assigned"})
+        return response.Response({"response": f"Task assigned to {user.username}"}, status=200)
 
     def perform_create(self, serializer):
         """
