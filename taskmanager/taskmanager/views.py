@@ -44,5 +44,6 @@ class APIRootView(APIView):
             {
                 "tasks": reverse("task-list", request=request),
                 "profiles": reverse("profile-list", request=request),
+                "projects": reverse("project-list", request=request),
             }
         )
