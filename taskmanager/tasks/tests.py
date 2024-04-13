@@ -2,18 +2,18 @@
 Tests for the tasks app
 """
 
-from django.contrib.auth.models import User
-from django.test import TestCase
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from profiles.models import Profile
 from rest_framework import status
-from rest_framework.test import APIRequestFactory, force_authenticate
+from rest_framework.test import APITestCase
 
 from .models import Task
-from .views import TaskViewSet
+
+User = get_user_model()
 
 
-class TaskViewSetTestCase(TestCase):
+class TaskViewSetTestCase(APITestCase):
     """
     Test case for the TaskViewSet class.
     """
@@ -22,10 +22,10 @@ class TaskViewSetTestCase(TestCase):
         """
         Set up the necessary data for the test case.
         """
-        self.factory = APIRequestFactory()
         self.user = User.objects.create_user(
             username="testuser", password="testpassword"
         )
+        self.client.force_authenticate(user=self.user)
         self.profile, created = Profile.objects.get_or_create(user=self.user)
         if created:
             self.profile.image = (
@@ -46,10 +46,7 @@ class TaskViewSetTestCase(TestCase):
         """
         Test the retrieve task functionality.
         """
-        view = TaskViewSet.as_view({"get": "retrieve"})
-        request = self.factory.get("/tasks/1/")
-        force_authenticate(request, user=self.user)
-        response = view(request, pk=self.task.pk)
+        response = self.client.get("/tasks/1/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Task")
 
@@ -57,20 +54,20 @@ class TaskViewSetTestCase(TestCase):
         """
         Test the assign task functionality.
         """
-        view = TaskViewSet.as_view({"post": "assign_task"})
-        request = self.factory.post(f"/tasks/{self.task.pk}/assign_task/")
-        force_authenticate(request, user=self.user)
-        response = view(request, pk=self.task.pk)
+        user2 = User.objects.create_user(
+            username="testuser2", password="testpassword"
+        )
+        response = self.client.post(
+            f"/tasks/{self.task.pk}/assign_task/", {"user_id": user2.pk})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.task.refresh_from_db()
-        self.assertIn(self.user, self.task.assigned.all())
+        self.assertIn(user2, self.task.assigned.all())
 
     def test_create_task(self):
         """
         Test the create task functionality.
         """
-        view = TaskViewSet.as_view({"post": "create"})
-        request = self.factory.post(
+        response = self.client.post(
             "/tasks/",
             {
                 "name": "New Task",
@@ -83,16 +80,13 @@ class TaskViewSetTestCase(TestCase):
                 "creator": self.user,
             },
         )
-        force_authenticate(request, user=self.user)
-        response = view(request)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_task_validation_error(self):
         """
         Test the create task functionality with validation error.
         """
-        view = TaskViewSet.as_view({"post": "create"})
-        request = self.factory.post(
+        response = self.client.post(
             "/tasks/",
             {
                 "name": "New Task",
@@ -105,8 +99,6 @@ class TaskViewSetTestCase(TestCase):
                 "creator": self.user,
             },
         )
-        force_authenticate(request, user=self.user)
-        response = view(request)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("non_field_errors", response.data)
 
@@ -114,18 +106,25 @@ class TaskViewSetTestCase(TestCase):
         """
         Test the invalid duration error.
         """
-        view = TaskViewSet.as_view({"get": "retrieve"})
         self.task.start_date = timezone.now() + timezone.timedelta(days=1)
         self.task.end_date = timezone.now()
         self.task.save()
-        request = self.factory.get(f"/tasks/{self.task.pk}/")
-        force_authenticate(request, user=self.user)
-        response = view(request, pk=self.task.pk)
+        response = self.client.get(f"/tasks/{self.task.pk}/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
 
+    def tearDown(self):
+        """
+        Clean up the data after the test case.
+        """
+        self.client.logout()
+        self.client.force_authenticate(user=None)
+        self.user.delete()
+        self.profile.delete()
+        self.task.delete()
 
-class TaskModelTest(TestCase):
+
+class TaskModelTest(APITestCase):
     """
     Test case for the Task model.
     """
@@ -192,3 +191,10 @@ class TaskModelTest(TestCase):
         Test the creator of the Task model.
         """
         self.assertEqual(self.task.creator, self.user)
+
+    def tearDown(self):
+        """
+        Clean up the data after the test case.
+        """
+        self.user.delete()
+        self.task.delete()
