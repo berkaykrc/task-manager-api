@@ -80,13 +80,15 @@ class Task(models.Model):
         ("MEDIUM", "Medium"),
         ("LOW", "Low"),
     ]
-    priority = models.CharField(max_length=6, choices=PRIORITY_CHOICES, default="LOW")
+    priority = models.CharField(
+        max_length=6, choices=PRIORITY_CHOICES, default="LOW")
     STATUS_CHOICES = [
         ("TODO", "To Do"),
         ("INPROGRESS", "In Progress"),
         ("DONE", "Done"),
     ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="TODO")
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="TODO")
     assigned = models.ManyToManyField(User, related_name="tasks")
     creator = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="created_tasks"
@@ -103,11 +105,11 @@ class Task(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=models.Q(start_date__lte=models.F("end_date")),
-                name="start_date_lte_end_date",
+                name="task_start_date_lte_end_date",
             ),
             models.CheckConstraint(
                 check=models.Q(end_date__gte=models.F("start_date")),
-                name="end_date_gte_start_date",
+                name="task_end_date_gte_start_date",
             ),
         ]
 
@@ -134,13 +136,11 @@ class Task(models.Model):
             duration = self.end_date - self.start_date
             if duration.total_seconds() < 0:
                 return "Error: End date is earlier than start date"
-            else:
-                total_seconds = int(duration.total_seconds())
-                hours, remainder = divmod(total_seconds, 3600)
-                minutes, _ = divmod(remainder, 60)
-                return f"{hours}h {minutes}m"
-        else:
-            return "Error: start_date and/or end_date is not set"
+            total_seconds = int(duration.total_seconds())
+            hours, remainder = divmod(total_seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            return f"{hours}h {minutes}m"
+        return "Error: start_date and/or end_date is not set"
 
     def __str__(self) -> str:
         """
