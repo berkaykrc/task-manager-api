@@ -99,7 +99,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data)
 
     @decorators.action(detail=True, methods=["post"])
-    def assign_task(self, request, user_id=None):
+    def assign_task(self, request, pk=None):
         """
         Assigns a task to a user.
 
@@ -111,6 +111,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             HttpResponse: The response indicating the task has been assigned.
         """
         task = self.get_object()
+        user_id = request.data.get("user_id")
         try:
             user = get_user_model().objects.get(id=user_id)
         except get_user_model().DoesNotExist:
