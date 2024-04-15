@@ -9,6 +9,7 @@ Classes:
 
 """
 
+from django.contrib.auth import get_user_model
 from profiles.serializers import UserSerializer
 from rest_framework import serializers
 
@@ -32,7 +33,8 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
 
     """
 
-    assigned = UserSerializer(many=True, read_only=True)
+    assigned = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=False, queryset=get_user_model().objects.all())
     creator = UserSerializer(read_only=True)
 
     class Meta:
@@ -57,6 +59,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
             "priority",
             "status",
             "duration",
+            "project"
         ]
 
     def validate(self, attrs):
@@ -74,5 +77,6 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
 
         """
         if attrs["start_date"] > attrs["end_date"]:
-            raise serializers.ValidationError("end_date must be after start_date")
+            raise serializers.ValidationError(
+                "end_date must be after start_date")
         return attrs
