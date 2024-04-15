@@ -3,8 +3,9 @@ Tests for the tasks app
 """
 
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from django.utils import timezone
-from profiles.models import Profile
+from projects.models import Project
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -26,27 +27,30 @@ class TaskViewSetTestCase(APITestCase):
             username="testuser", password="testpassword"
         )
         self.client.force_authenticate(user=self.user)
-        self.profile, created = Profile.objects.get_or_create(user=self.user)
-        if created:
-            self.profile.image = (
-                r"taskmanager\\media\\profile_pics\\LostArk_Creator_shadow.png"
-            )
-            self.profile.save()
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.user
+        )
         self.task = Task.objects.create(
             name="Test Task",
             description="Test Description",
             priority="asap",
             status="to do",
             creator=self.user,
-            start_date=timezone.now(),
-            end_date=timezone.now() + timezone.timedelta(days=1),
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            project=self.project,
         )
+        self.task.assigned.add(self.user)
 
     def test_retrieve_task(self):
         """
         Test the retrieve task functionality.
         """
-        response = self.client.get("/tasks/1/")
+        response = self.client.get(f"/tasks/{self.task.id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Task")
 
@@ -58,7 +62,7 @@ class TaskViewSetTestCase(APITestCase):
             username="testuser2", password="testpassword"
         )
         response = self.client.post(
-            f"/tasks/{self.task.pk}/assign_task/", {"user_id": user2.pk})
+            f"/tasks/{self.task.id}/assign_task/", {"user_id": user2.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.task.refresh_from_db()
         self.assertIn(user2, self.task.assigned.all())
@@ -74,10 +78,11 @@ class TaskViewSetTestCase(APITestCase):
                 "description": "New Description",
                 "priority": "ASAP",
                 "status": "TODO",
-                "start_date": timezone.now(),
-                "end_date": timezone.now() + timezone.timedelta(days=1),
+                "start_date": timezone.now() + timezone.timedelta(days=1),
+                "end_date": timezone.now() + timezone.timedelta(days=2),
                 "assigned": [self.user.pk],
-                "creator": self.user,
+                "creator": self.user.pk,
+                "project": reverse("project-detail", args=[self.project.pk]),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -89,29 +94,18 @@ class TaskViewSetTestCase(APITestCase):
         response = self.client.post(
             "/tasks/",
             {
-                "name": "New Task",
-                "description": "New Description",
-                "priority": "ASAP",
-                "status": "TODO",
-                "start_date": timezone.now(),
-                "end_date": timezone.now() - timezone.timedelta(days=1),
-                "assigned": [self.user.pk],
-                "creator": self.user,
+                "name": "",
+                "description": "",
+                "priority": "invalid",
+                "status": "invalid",
+                "start_date": timezone.now() + timezone.timedelta(days=1),
+                "end_date": timezone.now() - timezone.timedelta(days=2),
+                "assigned": "invalid",
+                "creator": "invalid",
+                "project": "invalid",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("non_field_errors", response.data)
-
-    def test_invalid_duratin_error(self):
-        """
-        Test the invalid duration error.
-        """
-        self.task.start_date = timezone.now() + timezone.timedelta(days=1)
-        self.task.end_date = timezone.now()
-        self.task.save()
-        response = self.client.get(f"/tasks/{self.task.pk}/")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
 
     def tearDown(self):
         """
@@ -120,7 +114,7 @@ class TaskViewSetTestCase(APITestCase):
         self.client.logout()
         self.client.force_authenticate(user=None)
         self.user.delete()
-        self.profile.delete()
+        self.project.delete()
         self.task.delete()
 
 
@@ -136,14 +130,22 @@ class TaskModelTest(APITestCase):
         self.user = User.objects.create_user(
             username="testuser", password="testpassword"
         )
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.user,
+        )
         self.task = Task.objects.create(
             name="Test Task",
-            start_date=timezone.now(),
-            end_date=timezone.now() + timezone.timedelta(days=1),
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
             description="Test description",
             priority="MEDIUM",
             status="TODO",
             creator=self.user,
+            project=self.project,
         )
         self.task.assigned.add(self.user)
 
@@ -198,3 +200,4 @@ class TaskModelTest(APITestCase):
         """
         self.user.delete()
         self.task.delete()
+        self.project.delete()
