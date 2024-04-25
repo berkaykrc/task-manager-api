@@ -23,28 +23,35 @@ class TaskViewSetTestCase(APITestCase):
         """
         Set up the necessary data for the test case.
         """
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
+        self.owner = User.objects.create_user(
+            username="owneruser", password="testpassword"
         )
-        self.client.force_authenticate(user=self.user)
+        self.member = User.objects.create_user(
+            username="member_user", password="testpassword"
+        )
+        self.non_member = User.objects.create_user(
+            username="non_member_user", password="testpassword"
+        )
+        self.client.force_authenticate(user=self.owner)
         self.project = Project.objects.create(
             name="Test Project",
             description="Test Description",
             start_date=timezone.now() + timezone.timedelta(days=1),
             end_date=timezone.now() + timezone.timedelta(days=2),
-            owner=self.user
+            owner=self.owner
         )
+        self.project.users.add(self.member)
         self.task = Task.objects.create(
             name="Test Task",
             description="Test Description",
             priority="asap",
             status="to do",
-            creator=self.user,
+            creator=self.owner,
             start_date=timezone.now() + timezone.timedelta(days=1),
             end_date=timezone.now() + timezone.timedelta(days=2),
             project=self.project,
         )
-        self.task.assigned.add(self.user)
+        self.task.assigned.add(self.owner)
 
     def test_retrieve_task(self):
         """
@@ -58,14 +65,11 @@ class TaskViewSetTestCase(APITestCase):
         """
         Test the assign task functionality.
         """
-        user2 = User.objects.create_user(
-            username="testuser2", password="testpassword"
-        )
         response = self.client.post(
-            f"/tasks/{self.task.id}/assign_task/", {"user_id": user2.id})
+            f"/tasks/{self.task.id}/assign_task/", {"user_id": self.non_member.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.task.refresh_from_db()
-        self.assertIn(user2, self.task.assigned.all())
+        self.assertIn(self.non_member, self.task.assigned.all())
 
     def test_create_task(self):
         """
@@ -80,8 +84,8 @@ class TaskViewSetTestCase(APITestCase):
                 "status": "TODO",
                 "start_date": timezone.now() + timezone.timedelta(days=1),
                 "end_date": timezone.now() + timezone.timedelta(days=2),
-                "assigned": [self.user.pk],
-                "creator": self.user.pk,
+                "assigned": [self.owner.pk],
+                "creator": self.owner.pk,
                 "project": reverse("project-detail", args=[self.project.pk]),
             },
         )
@@ -113,7 +117,9 @@ class TaskViewSetTestCase(APITestCase):
         """
         self.client.logout()
         self.client.force_authenticate(user=None)
-        self.user.delete()
+        self.owner.delete()
+        self.member.delete()
+        self.non_member.delete()
         self.project.delete()
         self.task.delete()
 
