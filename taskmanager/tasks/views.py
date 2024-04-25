@@ -25,7 +25,7 @@ from rest_framework import decorators, filters, response, viewsets
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Task
-from .permissions import IsCreatorOrReadOnly
+from .permissions import IsCreatorOrReadOnly, IsProjectMemberOrReadyOnly
 from .serializers import TaskSerializer
 
 
@@ -51,7 +51,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsCreatorOrReadOnly]
+    permission_classes = [IsCreatorOrReadOnly, IsProjectMemberOrReadyOnly]
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -59,7 +59,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     ]
     filterset_fields = ["priority", "status"]
     search_fields = ["name", "description", "priority", "status"]
-    ordering_fields = ["priority", "status"]
+    ordering_fields = ["priority", "status",
+                       "end_date", "duration", "created_at"]
     ordering = [
         "priority",
     ]
