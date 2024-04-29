@@ -2,7 +2,13 @@
 
 from django.contrib import admin
 
-from .models import Task
+from .models import Comment, Mention, Task
+
+
+class CommentInline(admin.TabularInline):
+    """Inline class for displaying comments in the Task admin view."""
+    model = Comment
+    extra = 0
 
 
 class TaskAdmin(admin.ModelAdmin):
@@ -37,6 +43,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ("status", "priority", "creator")
     search_fields = ("name", "description")
     ordering = ("-start_date",)
+    inlines = [CommentInline]
 
     def display_assigned(self, obj):
         """Display assigned to users."""
@@ -46,3 +53,5 @@ class TaskAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Task, TaskAdmin)
+admin.site.register(Comment)
+admin.site.register(Mention)

@@ -3,6 +3,8 @@ This module contains the models for the tasks app.
 
 Classes:
     Task: A class that represents a task.
+    Comment: A class that represents a comment.
+    Mention: A class that represents a mention.
 
 Functions:
     validate_start_date: A function that validates the start date of a task.
@@ -24,8 +26,7 @@ def validate_start_date(value):
     Function that validates the start date of a task.
 
     Args:
-
-        value: The start date of the task.
+        value (datetime): The start date of the task.
 
     Raises:
         ValidationError: If the start date is in the past.
@@ -36,10 +37,10 @@ def validate_start_date(value):
 
 def validate_end_date(value):
     """
-    Validates that the provided end date is not in the past.
+    Function that validates the end date of a task.
 
     Args:
-        value (datetime): The end date to validate.
+        value (datetime): The end date of the task.
 
     Raises:
         ValidationError: If the end date is in the past.
@@ -53,7 +54,6 @@ class Task(models.Model):
     A class that represents a task.
 
     Attributes:
-
         name (CharField): The name of the task.
         created_at (DateTimeField): The date and time the task was created.
         start_date (DateTimeField): The date and time the task is scheduled to start.
@@ -135,7 +135,6 @@ class Task(models.Model):
         Raises:
             ValueError: If the start_date and/or end_date is not set.
             ValueError: If the end_date is earlier than the start_date.
-
         """
         if self.start_date and self.end_date:
             duration = self.end_date - self.start_date
@@ -153,3 +152,53 @@ class Task(models.Model):
             str: The name of the task.
         """
         return str(self.name)
+
+
+class Comment(models.Model):
+    """
+    A class that represents a comment.
+
+    Attributes:
+        task (ForeignKey): The task the comment is associated with.
+        creator (ForeignKey): The user who created the comment.
+        created_at (DateTimeField): The date and time the comment was created.
+        content (TextField): The content of the comment.
+    """
+
+    task = models.ForeignKey(
+        Task, on_delete=models.CASCADE, related_name="comments")
+    creator = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="comments")
+    created_at = models.DateTimeField(auto_now_add=True)
+    content = models.TextField()
+
+    def __str__(self) -> str:
+        """
+        Returns:
+            str: The content of the comment.
+        """
+        return str(self.content)
+
+
+class Mention(models.Model):
+    """
+    A class that represents a mention.
+
+    Attributes:
+        comment (ForeignKey): The comment the mention is associated with.
+        mentioned_user (ForeignKey): The user who was mentioned.
+        created_at (DateTimeField): The date and time the mention was created.
+    """
+
+    comment = models.ForeignKey(
+        Comment, on_delete=models.CASCADE, related_name="mentions")
+    mentioned_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="mentions")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        """
+        Returns:
+            str: The user who was mentioned.
+        """
+        return str(self.mentioned_user)

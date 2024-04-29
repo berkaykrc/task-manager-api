@@ -3,17 +3,6 @@ This module contains the viewset for managing tasks in the Task Manager API.
 
 The TaskViewSet class provides CRUD operations for tasks, along with additional actions
 such as assigning a task to a user.
-
-Attributes:
-    queryset (QuerySet): The queryset of tasks.
-    serializer_class (Serializer): The serializer class for tasks.
-    authentication_classes (list): The authentication classes for the viewset.
-    permission_classes (list): The permission classes for the viewset.
-    filter_backends (list): The filter backends for the viewset.
-    filterset_fields (list): The fields to filter tasks by.
-    search_fields (list): The fields to search tasks by.
-    ordering_fields (list): The fields to order tasks by.
-    ordering (list): The default ordering for tasks.
 """
 
 from django.contrib.auth import get_user_model
@@ -24,9 +13,19 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import decorators, filters, response, viewsets
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .models import Task
-from .permissions import IsCreatorOrReadOnly, IsProjectMemberOrReadyOnly
-from .serializers import TaskSerializer
+from .models import Comment, Mention, Task
+from .permissions import (
+    IsCreatorOrReadOnly,
+    IsMentionedUser,
+    IsProjectMemberOrReadyOnly,
+)
+from .serializers import (
+    CommentReadSerializer,
+    CommentSerializer,
+    CommentUpdateSerializer,
+    MentionSerializer,
+    TaskSerializer,
+)
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -100,7 +99,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data)
 
     @decorators.action(detail=True, methods=["post"])
-    def assign_task(self, request, pk=None):
+    def assign_task(self, request, _pk=None):
         """
         Assigns a task to a user.
 
@@ -119,7 +118,33 @@ class TaskViewSet(viewsets.ModelViewSet):
             return response.Response({"error": "User not found"}, status=404)
         task.assigned.add(user)
         task.save()
-        return response.Response({"response": f"Task assigned to {user.username}"}, status=200)
+        return response.Response({
+            "response": f"Task assigned to {user.get_username()}"}, status=200)
+
+    @decorators.action(detail=True, methods=["patch"], url_path=r"comments/(?P<comment_id>\\d+)")
+    def update_comment(self, request, _pk=None, comment_id=None):
+        """
+        Updates a comment for a task.
+
+        Args:
+            request (HttpRequest): The request object.
+            pk (int): The ID of the task.
+            comment_id (int): The ID of the comment to update.
+
+        Returns:
+            HttpResponse: The response containing the updated comment data or an error message.
+        """
+        task = self.get_object()
+        try:
+            comment = task.comments.get(id=comment_id)
+        except Comment.DoesNotExist:
+            return response.Response({"error": "Comment not found"}, status=404)
+        serializer = CommentUpdateSerializer(
+            comment, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(serializer.data)
+        return response.Response(serializer.errors, status=400)
 
     def perform_create(self, serializer):
         """
@@ -134,3 +159,49 @@ class TaskViewSet(viewsets.ModelViewSet):
             None
         """
         serializer.save(creator=self.request.user)
+
+
+class MentionViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing mentions.
+
+    This viewset provides CRUD operations for mentions.
+
+    Attributes:
+        queryset (QuerySet): The queryset of mentions.
+        serializer_class (Serializer): The serializer class for mentions.
+        authentication_classes (list): The authentication classes for the viewset.
+        permission_classes (list): The permission classes for the viewset.
+    """
+
+    queryset = Mention.objects.all()
+    serializer_class = MentionSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsMentionedUser]
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing comments.
+
+    This viewset provides CRUD operations for comments.
+
+    Attributes:
+        queryset (QuerySet): The queryset of comments.
+        serializer_class (Serializer): The serializer class for comments.
+        authentication_classes (list): The authentication classes for the viewset.
+        permission_classes (list): The permission classes for the viewset.
+    """
+
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsCreatorOrReadOnly]
+
+    def get_serializer_class(self):
+        """
+        Return the serializer class for the view.
+        """
+        if self.action == "list" or self.action == "retrieve":
+            return CommentReadSerializer
+        return CommentSerializer

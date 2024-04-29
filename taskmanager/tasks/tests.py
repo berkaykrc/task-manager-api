@@ -9,7 +9,7 @@ from projects.models import Project
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Task
+from .models import Comment, Mention, Task
 
 User = get_user_model()
 
@@ -207,3 +207,102 @@ class TaskModelTest(APITestCase):
         self.user.delete()
         self.task.delete()
         self.project.delete()
+
+
+class CommentModelTest(APITestCase):
+    """
+    Test case for the Comment model.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.user,
+        )
+        self.task = Task.objects.create(
+            name="Test Task",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            description="Test description",
+            priority="MEDIUM",
+            status="TODO",
+            creator=self.user,
+            project=self.project,
+        )
+        self.task.assigned.add(self.user)
+        self.comment = Comment.objects.create(
+            task=self.task,
+            creator=self.user,
+            content="Test Comment @testuser",
+        )
+
+    def test_comment_creation(self):
+        """
+        Test the creation of the comment.
+        """
+        self.assertEqual(self.comment.content, "Test Comment @testuser")
+        self.assertEqual(self.comment.task, self.task)
+        self.assertEqual(self.comment.creator, self.user)
+
+    def tearDown(self):
+        """
+        Clean up the data after the test case.
+        """
+        self.user.delete()
+        self.task.delete()
+        self.project.delete()
+        self.comment.delete()
+
+
+class CommentViewSetTest(APITestCase):
+    """
+    Test case for the CommentViewSet class.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword")
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.user,
+        )
+        self.task = Task.objects.create(
+            name="Test Task",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            description="Test description",
+            priority="MEDIUM",
+            status="TODO",
+            creator=self.user,
+            project=self.project,
+        )
+        self.comment = Comment.objects.create(
+            content="Test comment", creator=self.user, task=self.task)
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_comment(self):
+        """
+        Test the create comment functionality.
+        """
+        mentioned_user = User.objects.create_user(
+            username="mentioned_user", password="testpassword"
+        )
+        response = self.client.post(
+            "/tasks/comments/",
+            {
+                "content": "New Comment @testuser",
+                "creator": self.user.pk,
+                "task": self.task.pk,
+                "mentions": [mentioned_user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

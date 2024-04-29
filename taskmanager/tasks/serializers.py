@@ -9,11 +9,181 @@ Classes:
 
 """
 
+import re
+
 from django.contrib.auth import get_user_model
 from profiles.serializers import UserSerializer
 from rest_framework import serializers
 
-from .models import Task
+from .models import Comment, Mention, Task
+
+
+class MentionSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for the Mention model.
+
+    This serializer is used to convert Mention model instances to JSON
+    and vice versa. It specifies the fields to be included in the
+    serialized representation of a Mention object.
+    """
+
+    class Meta:
+        """
+        Meta class for defining metadata options for the MentionSerializer class.
+
+        Attributes:
+            model (class): The model
+            fields (list): The list of fields to include in serialized representation of the model.
+        """
+
+        model = Mention
+        fields = [
+            "id",
+            "mentioned_user",
+            "created_at",
+        ]
+
+
+class CommentUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for the Comment model.
+
+    This serializer is used to convert Comment model instances to JSON
+    and vice versa. It specifies the fields to be included in the
+    serialized representation of a Comment object.
+    """
+    class Meta:
+        """
+        Meta class for defining metadata options for the CommentSerializer class.
+
+        Attributes:
+            model (class): The model
+            fields (list): The list of fields to include in serialized representation of the model.
+        """
+        model = Comment
+        fields = ["content"]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for the Comment model.
+
+    This serializer is used to convert Comment model instances to JSON
+    and vice versa. It specifies the fields to be included in the
+    serialized representation of a Comment object.
+
+    Attributes:
+        task: A nested TaskSerializer instance representing the task the comment belongs to.
+    """
+
+    task = "TaskSerializer"
+
+    class Meta:
+        """
+        Meta class for defining metadata options for the CommentSerializer class.
+
+        Attributes:
+            model (class): The model class that the serializer is based on.
+            fields (list): The list of fields to include in serialized representation of the model.
+        """
+
+        model = Comment
+        fields = [
+            "id",
+            "task",
+            "created_at",
+            "creator",
+            "content",
+        ]
+
+    def create(self, validated_data):
+        """
+        Creates a new comment instance.
+
+        This method overrides the default create method to add support for mentions in comments.
+        It extracts mentions from the comment text and creates Mention instances for each mention.
+
+        Args:
+            validated_data (dict): The validated data for the new comment.
+
+        Returns:
+            Comment: The newly created comment instance.
+        """
+        comment = super().create(validated_data)
+        text = comment.content
+        mentions = re.findall(r"@(\w+)", text)
+        for username in mentions:
+            try:
+                user = get_user_model().objects.get(username=username)
+                Mention.objects.create(mentioned_user=user, comment=comment)
+            except get_user_model().DoesNotExist:
+                pass  # If the user does not exist, we simply skip the mention
+        return comment
+
+    def update(self, instance, validated_data):
+        """
+        Updates an existing comment instance.
+
+        This method overrides the default update method to add support for mentions in comments.
+        It extracts mentions from the comment text and creates Mention instances for each mention.
+
+        Args:
+            instance (Comment): The existing comment instance to update.
+            validated_data (dict): The validated data for the updated comment.
+
+        Returns:
+            Comment: The updated comment instance.
+        """
+        instance.content = validated_data.get("content", instance.content)
+        instance.save()
+
+        text = instance.content
+        mentions = re.findall(r"@(\w+)", text)
+
+        for username in mentions:
+            try:
+                user = get_user_model().objects.get(username=username)
+                Mention.objects.get_or_create(
+                    mentioned_user=user, comment=instance)
+            except get_user_model().DoesNotExist:
+                pass
+        for mention in instance.mentions.all():
+            if '@' + mention.mentioned_user.username not in mentions:
+                mention.delete()
+        return instance
+
+
+class CommentReadSerializer(CommentSerializer):
+    """
+    Serializer class for the Comment model.
+
+    This serializer is used to convert Comment model instances to JSON
+    and vice versa. It specifies the fields to be included in the
+    serialized representation of a Comment object.
+
+    Attributes:
+        mentions (MentionSerializer): Serializer for the mentions field.
+
+    Inherits:
+        CommentSerializer: Base serializer class for the Comment model.
+
+    Example:
+        To use this serializer, create an instance of CommentReadSerializer
+        and pass a Comment object to it:
+
+        >>> comment = Comment.objects.get(id=1)
+        >>> serializer = CommentReadSerializer(comment)
+        >>> serialized_data = serializer.data
+    """
+    class Meta(CommentSerializer.Meta):
+        """
+        Meta class for defining metadata options for the CommentReadSerializer class.
+
+        Attributes:
+            model (class): The model class to be serialized.
+            fields (list): The list of fields to include in the serialized representation of the model.
+        """
+        fields = CommentSerializer.Meta.fields + ["mentions"]
 
 
 class TaskSerializer(serializers.HyperlinkedModelSerializer):
@@ -36,6 +206,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
     assigned = serializers.PrimaryKeyRelatedField(
         many=True, read_only=False, queryset=get_user_model().objects.all())
     creator = UserSerializer(read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         """
@@ -59,7 +230,8 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
             "priority",
             "status",
             "duration",
-            "project"
+            "project",
+            "comments"
         ]
 
     def validate(self, attrs):
