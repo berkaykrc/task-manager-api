@@ -55,7 +55,7 @@ class Profile(models.Model):
     expo_push_token = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return f"{get_user_model().get_username()} Profile"
+        return f"{self.user.get_username()} Profile"
 
     def delete(self, *args, **kwargs):
         """
