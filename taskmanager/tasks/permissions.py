@@ -2,9 +2,16 @@
 This module contains custom permissions for the tasks app.
 
 The permissions defined in this module are used to control access to task objects.
-"""
 
+Classes:
+    - IsCreatorOrReadOnly: Custom permission class that allows only the creators of a task to edit it.
+    - IsProjectMemberOrReadOnly: Custom permission class that allows only project members to view and edit tasks associated with the project.
+    - IsMentionedUser: Custom permission class that allows only the mentioned user to view and edit mentions associated with the user.
+    - IsProjectMember: Custom permission class that allows only project members to view and edit comments associated with the project.
+"""
 from rest_framework import permissions
+
+from .models import Comment, Mention, Task
 
 
 class IsCreatorOrReadOnly(permissions.BasePermission):
@@ -36,11 +43,10 @@ class IsCreatorOrReadOnly(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             return True
-
         return obj.creator == request.user
 
 
-class IsProjectMemberOrReadyOnly(permissions.BasePermission):
+class IsProjectMemberOrReadOnly(permissions.BasePermission):
     """
     Custom permission class for Django REST Framework.
 
@@ -70,8 +76,7 @@ class IsProjectMemberOrReadyOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        project = obj.project
-        return project.owner == request.user or project.users.filter(pk=request.user.pk).exists()
+        return obj.project.owner == request.user or obj.project.users.filter(pk=request.user.pk).exists()
 
 
 class IsMentionedUser(permissions.BasePermission):
@@ -101,7 +106,50 @@ class IsMentionedUser(permissions.BasePermission):
         Returns:
             bool: True if the user has permission, False otherwise.
         """
-        if request.method in permissions.SAFE_METHODS:
-            return True
+        if isinstance(obj, Mention):
+            return obj.mentioned_user == request.user
+        return False
 
-        return obj.mentioned_user == request.user
+
+class IsProjectMember(permissions.BasePermission):
+    """
+    Custom permission class for Django REST Framework.
+    Determines if the user has permission to access a project-related object.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Check if the user has permission to access the specified object.
+
+        Args:
+            request (HttpRequest): The request being made.
+            view (View): The view handling the request.
+            obj (object): The object being accessed.
+
+        Returns:
+            bool: True if the user has permission, False otherwise.
+        """
+        if isinstance(obj, Comment):
+            return obj.creator == request.user or obj.task.project.users.filter(pk=request.user.pk).exists()
+        return False
+
+    def has_permission(self, request, view):
+        """
+        Check if the user has permission to perform the specified action.
+
+        Args:
+            request (HttpRequest): The request being made.
+            view (View): The view handling the request.
+
+        Returns:
+            bool: True if the user has permission, False otherwise.
+        """
+        if request.method == "POST":
+            task_id = request.data.get('task')
+            if task_id is not None:
+                try:
+                    task = Task.objects.get(pk=task_id)
+                    return task.project.users.filter(pk=request.user.pk).exists() or task.project.owner == request.user
+                except Task.DoesNotExist:
+                    return False
+        return True
