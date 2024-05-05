@@ -13,11 +13,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import decorators, filters, response, viewsets
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .models import Comment, Mention, Task
+from .models import Comment, Mention, Project, Task
 from .permissions import (
     IsCreatorOrReadOnly,
     IsMentionedUser,
-    IsProjectMemberOrReadyOnly,
+    IsProjectMember,
+    IsProjectMemberOrReadOnly,
 )
 from .serializers import (
     CommentReadSerializer,
@@ -50,7 +51,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsCreatorOrReadOnly, IsProjectMemberOrReadyOnly]
+    permission_classes = [IsCreatorOrReadOnly, IsProjectMemberOrReadOnly]
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -99,7 +100,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data)
 
     @decorators.action(detail=True, methods=["post"])
-    def assign_task(self, request, _pk=None):
+    def assign_task(self, request, pk=None):
         """
         Assigns a task to a user.
 
@@ -116,6 +117,8 @@ class TaskViewSet(viewsets.ModelViewSet):
             user = get_user_model().objects.get(id=user_id)
         except get_user_model().DoesNotExist:
             return response.Response({"error": "User not found"}, status=404)
+        if request.user not in task.project.users.all() and request.user != task.project.owner:
+            return response.Response({"error": "User is not a member of the project or owner"}, status=403)
         task.assigned.add(user)
         task.save()
         return response.Response({
@@ -158,6 +161,12 @@ class TaskViewSet(viewsets.ModelViewSet):
         Returns:
             None
         """
+        project_url = self.request.data.get("project")
+        # Extract the project ID from the URL string
+        project_id = project_url.rstrip('/').split('/')[-1]
+        project = Project.objects.get(pk=project_id)
+        if self.request.user != project.owner and not project.users.filter(pk=self.request.user.pk).exists():
+            raise ValidationError("You are not a member of this project")
         serializer.save(creator=self.request.user)
 
 
@@ -196,7 +205,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsCreatorOrReadOnly]
+    permission_classes = [IsCreatorOrReadOnly, IsProjectMember]
 
     def get_serializer_class(self):
         """
