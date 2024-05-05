@@ -32,7 +32,6 @@ class TaskViewSetTestCase(APITestCase):
         self.non_member = User.objects.create_user(
             username="non_member_user", password="testpassword"
         )
-        self.client.force_authenticate(user=self.owner)
         self.project = Project.objects.create(
             name="Test Project",
             description="Test Description",
@@ -52,6 +51,7 @@ class TaskViewSetTestCase(APITestCase):
             project=self.project,
         )
         self.task.assigned.add(self.owner)
+        self.client.force_authenticate(user=self.owner)
 
     def test_retrieve_task(self):
         """
@@ -66,9 +66,9 @@ class TaskViewSetTestCase(APITestCase):
         Test the assign task functionality.
         """
         response = self.client.post(
-            f"/tasks/{self.task.id}/assign_task/", {"user_id": self.non_member.id})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+            f"/tasks/{self.task.pk}/assign_task/", {"user_id": self.non_member.pk})
         self.task.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(self.non_member, self.task.assigned.all())
 
     def test_create_task(self):
@@ -104,9 +104,9 @@ class TaskViewSetTestCase(APITestCase):
                 "status": "invalid",
                 "start_date": timezone.now() + timezone.timedelta(days=1),
                 "end_date": timezone.now() - timezone.timedelta(days=2),
-                "assigned": "invalid",
+                "assigned": ["invalid"],
                 "creator": "invalid",
-                "project": "invalid",
+                "project": reverse("project-detail", args=[self.project.pk]),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -275,6 +275,7 @@ class CommentViewSetTest(APITestCase):
             end_date=timezone.now() + timezone.timedelta(days=2),
             owner=self.user,
         )
+        self.project.users.add(self.user)
         self.task = Task.objects.create(
             name="Test Task",
             start_date=timezone.now() + timezone.timedelta(days=1),
@@ -285,6 +286,7 @@ class CommentViewSetTest(APITestCase):
             creator=self.user,
             project=self.project,
         )
+        self.task.assigned.add(self.user)
         self.comment = Comment.objects.create(
             content="Test comment", creator=self.user, task=self.task)
         self.client.force_authenticate(user=self.user)
@@ -296,13 +298,229 @@ class CommentViewSetTest(APITestCase):
         mentioned_user = User.objects.create_user(
             username="mentioned_user", password="testpassword"
         )
+        comment_content = "New Comment @mentioned_user"
         response = self.client.post(
             "/tasks/comments/",
             {
-                "content": "New Comment @testuser",
+                "content": comment_content,
                 "creator": self.user.pk,
                 "task": self.task.pk,
-                "mentions": [mentioned_user.pk],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Mention.objects.filter(
+            mentioned_user=mentioned_user).exists())
+        self.assertTrue(Comment.objects.filter(
+            content=comment_content, creator=self.user, task=self.task).exists())
+
+    def test_non_project_member_cannot_create_comment(self):
+        """
+        Test that a user who is not a member of the project cannot create a comment in a task.
+        """
+
+        non_member_user = User.objects.create_user(
+            username="non_member_user", password="testpassword")
+
+        self.client.force_authenticate(user=non_member_user)
+
+        response = self.client.post(
+            "/tasks/comments/",
+            {
+                "content": "New Comment",
+                "creator": non_member_user.pk,
+                "task": self.task.pk,
+                "mentions": [self.user.pk]
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_mention_created_when_comment_created(self):
+        """
+        Test that a mention is created when a comment is created.
+        """
+        mentioned_user = User.objects.create_user(
+            username="mentioned_user", password="testpassword"
+        )
+        response = self.client.post(
+            "/tasks/comments/",
+            {
+                "content": "New Comment @mentioned_user",
+                "creator": self.user.pk,
+                "task": self.task.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Mention.objects.filter(
+            mentioned_user=mentioned_user).exists())
+
+    def test_delete_comment_and_associated_mentions(self):
+        """
+        Test that when a comment is deleted, all associated mentions are also deleted.
+        """
+        response = self.client.delete(f'/tasks/comments/{self.comment.pk}/')
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Comment.objects.filter(pk=self.comment.pk).exists())
+
+    def tearDown(self):
+        """
+        Clean up the data after the test case.
+        """
+        self.user.delete()
+        self.task.delete()
+        self.project.delete()
+        self.comment.delete()
+
+
+class MentionViewSetTest(APITestCase):
+    """
+    Test case for the MentionViewSet class.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword")
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.user,
+        )
+        self.project.users.add(self.user)
+        self.task = Task.objects.create(
+            name="Test Task",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            description="Test description",
+            priority="MEDIUM",
+            status="TODO",
+            creator=self.user,
+            project=self.project,
+        )
+        self.comment = Comment.objects.create(
+            content="Test comment @testuser", creator=self.user, task=self.task)
+        self.mention = Mention.objects.create(
+            mentioned_user=self.user, comment=self.comment)
+        self.client.force_authenticate(user=self.user)
+
+    def test_multiple_mentions_in_comment(self):
+        """
+        Test that multiple mentions in a comment are saved correctly.
+        """
+        mentioned_user1 = User.objects.create_user(
+            username="mentioned_user1", password="testpassword"
+        )
+        mentioned_user2 = User.objects.create_user(
+            username="mentioned_user2", password="testpassword"
+        )
+        response = self.client.post(
+            "/tasks/comments/",
+            {
+                "content": "New Comment @mentioned_user1 @mentioned_user2",
+                "creator": self.user.pk,
+                "task": self.task.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Mention.objects.filter(
+            mentioned_user=mentioned_user1).exists())
+        self.assertTrue(Mention.objects.filter(
+            mentioned_user=mentioned_user2).exists())
+
+    def test_mention_non_existent_user(self):
+        """
+        Test that mentions to non-existent users are not saved.
+        """
+        comment_content = "New Comment @non_existent_user"
+        response = self.client.post(
+            "/tasks/comments/",
+            {
+                "content": comment_content,
+                "creator": self.user.pk,
+                "task": self.task.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(Mention.objects.filter(
+            mentioned_user__username="non_existent_user").exists())
+
+    def test_mention_without_at_symbol(self):
+        """
+        Test that mentions without the @ symbol are not saved.
+        """
+        mentioned_user = User.objects.create_user(
+            username="user1", password="testpassword")
+        comment_content = "Hello user1"
+        response = self.client.post(
+            '/tasks/comments/', {'task': self.task.pk, 'content': comment_content, 'creator': self.user.pk})
+        self.assertEqual(response.status_code, 201)
+        self.assertFalse(Mention.objects.filter(
+            mentioned_user=mentioned_user).exists())
+
+    def test_mention_in_middle_of_word(self):
+        """
+        Test that mentions in the middle of a word are not saved.
+        """
+        mentioned_user = User.objects.create_user(
+            username="user1", password="testpassword")
+        comment_content = "Hello @user1world"
+        response = self.client.post(
+            '/tasks/comments/', {'task': self.task.pk, 'content': comment_content, 'creator': self.user.pk})
+        self.assertEqual(response.status_code, 201)
+        self.assertFalse(Mention.objects.filter(
+            mentioned_user=mentioned_user).exists())
+
+    def test_mentioned_user_can_view_mention(self):
+        """
+        Test that the mentioned user can view the mention.
+        """
+        response = self.client.get(f"/tasks/mentions/{self.mention.pk}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_mentioned_user_can_edit_mention(self):
+        """
+        Test that the mentioned user can edit the mention.
+        """
+        response = self.client.patch(
+            f'/tasks/mentions/{self.mention.pk}/', {'comment': 'Updated comment'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_non_mentioned_user_cannot_view_mention(self):
+        """
+        Test that a non-mentioned user cannot view a mention.
+        """
+        non_mentioned_user = User.objects.create_user(
+            username='non_mentioned_user', password='testpassword')
+        self.client.force_authenticate(user=non_mentioned_user)
+        response = self.client.get(f'/tasks/mentions/{self.mention.pk}/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_non_mentioned_user_cannot_edit_mention(self):
+        """
+        Test that a non-mentioned user cannot edit a mention.
+        """
+        non_mentioned_user = User.objects.create_user(
+            username='non_mentioned_user', password='testpassword')
+        self.client.force_authenticate(user=non_mentioned_user)
+        response = self.client.patch(
+            f'/tasks/mentions/{self.mention.pk}/', {'comment': 'Updated comment'})
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_comment_and_associated_mentions(self):
+        """
+        Test that when a comment is deleted, all associated mentions are also deleted.
+        """
+        response = self.client.delete(f'/tasks/comments/{self.comment.pk}/')
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Comment.objects.filter(pk=self.comment.pk).exists())
+        self.assertFalse(Mention.objects.filter(pk=self.mention.pk).exists())
+
+    def tearDown(self):
+        """
+        Clean up the data after the test case.
+        """
+        self.user.delete()
+        self.task.delete()
+        self.project.delete()
+        self.comment.delete()
+        self.mention.delete()
