@@ -28,8 +28,12 @@ app.conf.broker_connection_retry_on_startup = True
 
 
 app.conf.beat_schedule = {
-    "run-your-command-every-midnight": {
+    "send_assigned_task_notifications": {
         "task": "tasks.tasks.task_send_fcm_notifications",
-        "schedule": crontab(minute=0, hour=0),
+        "schedule": crontab(minute="0", hour="0"),
     },
+    "send_due_date_notifications": {
+        "task": "tasks.tasks.send_due_date_notifications",
+        "schedule": crontab(minute="7", hour="23"),
+    }
 }
