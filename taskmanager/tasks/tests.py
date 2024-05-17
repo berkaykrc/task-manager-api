@@ -2,12 +2,16 @@
 Tests for the tasks app
 """
 
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from projects.models import Project
 from rest_framework import status
 from rest_framework.test import APITestCase
+from tasks.tasks import send_due_date_notifications
 
 from .models import Comment, Mention, Task
 
@@ -122,6 +126,128 @@ class TaskViewSetTestCase(APITestCase):
         self.non_member.delete()
         self.project.delete()
         self.task.delete()
+
+
+class SendueDateNotificationTestCase(TestCase):
+    """
+    Test case for the send_due_date_notifications task.
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="owneruser", password="testpassword"
+        )
+        self.member = User.objects.create_user(
+            username="member_user", password="testpassword"
+        )
+        self.member.profile.expo_push_token = 'ExponentPushToken[yyyyyyyyyyyyyyyyyyyy]'
+        self.member.profile.save()
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.owner
+        )
+        self.project.users.add(self.member)
+        self.task = Task.objects.create(
+            name="Test Task",
+            description="Test Description",
+            priority="asap",
+            status="to do",
+            creator=self.owner,
+            start_date=timezone.now() + timezone.timedelta(hours=1),
+            end_date=timezone.now() + timezone.timedelta(days=1),
+            project=self.project,
+        )
+        self.task.assigned.add(self.member)
+        self.client.force_login(user=self.owner)
+
+    @patch('tasks.tasks.send_notification.delay')
+    def test_send_due_date_notifications(self, mock_send_notification):
+        """
+        Test that the send_due_date_notifications task sends a notification to a user 
+        with a task due tomorrow.
+        """
+        send_due_date_notifications()
+
+        mock_send_notification.assert_called_with(
+            "Task due soon",
+            "The task Test Task is due tomorrow",
+            self.member.profile.expo_push_token
+        )
+
+    def tearDown(self):
+        self.owner.delete()
+        self.member.delete()
+        self.project.delete()
+        self.task.delete()
+
+
+class SendNotificationOnMentionTestCase(TestCase):
+    """
+    Test case for the send_notification_on_mention task.
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="owneruser", password="testpassword"
+        )
+        self.member = User.objects.create_user(
+            username="member_user", password="testpassword"
+        )
+        self.member.profile.expo_push_token = 'ExponentPushToken[yyyyyyyyyyyyyyyyyyyy]'
+        self.member.profile.save()
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.owner
+        )
+        self.project.users.add(self.member)
+        self.task = Task.objects.create(
+            name="Test Task",
+            description="Test Description",
+            priority="asap",
+            status="to do",
+            creator=self.owner,
+            start_date=timezone.now() + timezone.timedelta(hours=1),
+            end_date=timezone.now() + timezone.timedelta(days=1),
+            project=self.project,
+        )
+        self.task.assigned.add(self.member)
+        self.comment = Comment.objects.create(
+            content="Test comment @member_user",
+            creator=self.owner,
+            task=self.task
+        )
+        self.mention = Mention.objects.create(
+            mentioned_user=self.member,
+            comment=self.comment
+        )
+        self.client.force_login(user=self.owner)
+
+    @patch('tasks.tasks.send_notification.delay')
+    def test_send_notification_on_mention(self, mock_send_notification):
+        """
+        Test that the send_notification_on_mention task sends a notification to a user 
+        when they are mentioned in a comment.
+        """
+
+        mock_send_notification.assert_called_with(
+            "Mention",
+            "You have been mentioned in a comment",
+            self.member.profile.expo_push_token
+        )
+
+    def tearDown(self):
+        self.owner.delete()
+        self.member.delete()
+        self.project.delete()
+        self.task.delete()
+        self.comment.delete()
+        self.mention.delete()
 
 
 class TaskModelTest(APITestCase):
