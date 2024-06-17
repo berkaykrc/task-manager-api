@@ -11,6 +11,12 @@ class CommentInline(admin.TabularInline):
     extra = 0
 
 
+class TaskInline(admin.TabularInline):
+    """Inline class for displaying tasks in the Project admin view."""
+    model = Task
+    extra = 0
+
+
 class TaskAdmin(admin.ModelAdmin):
     """
     Admin View for Task
