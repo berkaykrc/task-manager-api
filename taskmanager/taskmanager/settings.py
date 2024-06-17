@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "tasks.apps.TasksConfig",
     "profiles",
     "projects",
+    "files",
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",

@@ -19,6 +19,8 @@ Including another URLconf
 
 import debug_toolbar
 from dj_rest_auth.views import PasswordResetConfirmView, PasswordResetView
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views.decorators.csrf import csrf_exempt
@@ -35,6 +37,7 @@ urlpatterns = [
     path("tasks/", include("tasks.urls")),
     path("profiles/", include("profiles.urls")),
     path("projects/", include("projects.urls")),
+    path("files/", include("files.urls")),
     path('password/reset/',
          PasswordResetView.as_view(), name='password_reset'),
     path('password-reset-confirm/<uidb64>/<token>/',
@@ -43,3 +46,7 @@ urlpatterns = [
     path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
     path("__debug__/", include(debug_toolbar.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
