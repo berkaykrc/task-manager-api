@@ -96,12 +96,4 @@ class FileTests(APITestCase):
             if os.path.isfile(file_path):
                 os.remove(file_path)
 
-        # Delete the file instances from the database
-        files.delete()
-
-        # Call the super's tearDown to ensure any additional cleanup is performed
         super().tearDown()
-
-        # Delete the user and project if they are not handled by the super's tearDown
-        self.user.delete()
-        self.project.delete()

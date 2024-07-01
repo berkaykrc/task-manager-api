@@ -117,9 +117,3 @@ class ProjectViewSetTestCase(APITestCase):
         """
         response = self.client.delete(f"/projects/{self.project.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def tearDown(self):
-        self.client.logout()
-        self.user.delete()
-        self.project.delete()
-        self.task.delete()

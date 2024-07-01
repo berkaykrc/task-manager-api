@@ -121,11 +121,7 @@ class TaskViewSetTestCase(APITestCase):
         """
         self.client.logout()
         self.client.force_authenticate(user=None)
-        self.owner.delete()
-        self.member.delete()
-        self.non_member.delete()
-        self.project.delete()
-        self.task.delete()
+        super().tearDown()
 
 
 class SendueDateNotificationTestCase(TestCase):
@@ -176,12 +172,6 @@ class SendueDateNotificationTestCase(TestCase):
             "The task Test Task is due tomorrow",
             self.member.profile.expo_push_token
         )
-
-    def tearDown(self):
-        self.owner.delete()
-        self.member.delete()
-        self.project.delete()
-        self.task.delete()
 
 
 class SendNotificationOnMentionTestCase(TestCase):
@@ -240,14 +230,6 @@ class SendNotificationOnMentionTestCase(TestCase):
             "You have been mentioned in a comment",
             self.member.profile.expo_push_token
         )
-
-    def tearDown(self):
-        self.owner.delete()
-        self.member.delete()
-        self.project.delete()
-        self.task.delete()
-        self.comment.delete()
-        self.mention.delete()
 
 
 class TaskModelTest(APITestCase):
@@ -326,14 +308,6 @@ class TaskModelTest(APITestCase):
         """
         self.assertEqual(self.task.creator, self.user)
 
-    def tearDown(self):
-        """
-        Clean up the data after the test case.
-        """
-        self.user.delete()
-        self.task.delete()
-        self.project.delete()
-
 
 class CommentModelTest(APITestCase):
     """
@@ -375,15 +349,6 @@ class CommentModelTest(APITestCase):
         self.assertEqual(self.comment.content, "Test Comment @testuser")
         self.assertEqual(self.comment.task, self.task)
         self.assertEqual(self.comment.creator, self.user)
-
-    def tearDown(self):
-        """
-        Clean up the data after the test case.
-        """
-        self.user.delete()
-        self.task.delete()
-        self.project.delete()
-        self.comment.delete()
 
 
 class CommentViewSetTest(APITestCase):
@@ -486,15 +451,6 @@ class CommentViewSetTest(APITestCase):
         response = self.client.delete(f'/tasks/comments/{self.comment.pk}/')
         self.assertEqual(response.status_code, 204)
         self.assertFalse(Comment.objects.filter(pk=self.comment.pk).exists())
-
-    def tearDown(self):
-        """
-        Clean up the data after the test case.
-        """
-        self.user.delete()
-        self.task.delete()
-        self.project.delete()
-        self.comment.delete()
 
 
 class MentionViewSetTest(APITestCase):
@@ -640,13 +596,3 @@ class MentionViewSetTest(APITestCase):
         self.assertEqual(response.status_code, 204)
         self.assertFalse(Comment.objects.filter(pk=self.comment.pk).exists())
         self.assertFalse(Mention.objects.filter(pk=self.mention.pk).exists())
-
-    def tearDown(self):
-        """
-        Clean up the data after the test case.
-        """
-        self.user.delete()
-        self.task.delete()
-        self.project.delete()
-        self.comment.delete()
-        self.mention.delete()

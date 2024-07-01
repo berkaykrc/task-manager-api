@@ -57,11 +57,6 @@ class ProfileViewSetTestCase(APITestCase):
                 content_type='image/jpeg')
         self.client.force_authenticate(user=self.user)
 
-    def tearDown(self):
-        self.client.logout()
-        self.image_file.close()
-        os.remove(self.image_file_path)
-
     def test_authorization_is_enforced(self):
         """
         Tests authorization enforcement.
@@ -278,6 +273,12 @@ class ProfileViewSetTestCase(APITestCase):
         self.assertTrue("next" in response.data)
         self.assertTrue("previous" in response.data)
 
+    def tearDown(self):
+        self.client.logout()
+        self.image_file.close()
+        os.remove(self.image_file_path)
+        super().tearDown()
+
 
 class GroupViewSetTestCase(APITestCase):
     """
@@ -370,6 +371,11 @@ class GroupViewSetTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertRaises(Group.DoesNotExist,
                           Group.objects.get, pk=self.group.pk)
+
+    def tearDown(self):
+        self.client.logout()
+        self.client.force_authentication(user=None)
+        super().tearDown()
 
 
 class UserRegistrationTestCase(APITestCase):
@@ -604,9 +610,6 @@ class LoginTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse("access" in response.data)
 
-    def tearDown(self):
-        self.user.delete()
-
 
 class UserViewSetTestCase(APITestCase):
     """
@@ -665,6 +668,6 @@ class UserViewSetTestCase(APITestCase):
         self.assertEqual(response.data['username'], self.user.username)
 
     def tearDown(self):
-        self.user.delete()
         self.client.logout()
         self.client.force_authenticate(user=None)
+        super().tearDown()
