@@ -127,6 +127,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "taskmanager.wsgi.application"
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "taskmanager.projects.views": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
