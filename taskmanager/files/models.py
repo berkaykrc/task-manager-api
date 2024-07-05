@@ -4,6 +4,8 @@ This module contains the model definitions for the SharedFile model.
 
 from django.contrib.auth import get_user_model
 from django.db import models
+from projects.models import Project
+from tasks.models import Task
 
 
 class SharedFile(models.Model):
@@ -20,6 +22,9 @@ class SharedFile(models.Model):
     file = models.FileField(upload_to='shared_files/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    project = models.ForeignKey('projects.Project', on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     task = models.ForeignKey(
-        'tasks.Task', on_delete=models.CASCADE, null=True, blank=True)
+        Task, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return self.file.name
