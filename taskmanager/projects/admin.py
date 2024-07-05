@@ -3,6 +3,7 @@ This module contains the admin configuration for the Project model.
 """
 
 from django.contrib import admin
+from files.admin import SharedFilesInline
 from tasks.admin import TaskInline
 
 from .models import Project
@@ -26,7 +27,7 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'start_date', 'end_date', 'owner')
     list_filter = ('start_date', 'end_date')
     search_fields = ['name', 'description']
-    inlines = [TaskInline]
+    inlines = [TaskInline, SharedFilesInline]
     filter_horizontal = ('users',)
 
 
