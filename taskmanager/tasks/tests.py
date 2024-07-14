@@ -61,7 +61,7 @@ class TaskViewSetTestCase(APITestCase):
         """
         Test the retrieve task functionality.
         """
-        response = self.client.get(f"/tasks/{self.task.id}/")
+        response = self.client.get(f"/tasks/{self.task.pk}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Task")
 
@@ -88,7 +88,7 @@ class TaskViewSetTestCase(APITestCase):
                 "status": "TODO",
                 "start_date": timezone.now() + timezone.timedelta(days=1),
                 "end_date": timezone.now() + timezone.timedelta(days=2),
-                "assigned": [self.owner.pk],
+                "assigned": [self.member.pk],
                 "creator": self.owner.pk,
                 "project": reverse("project-detail", args=[self.project.pk]),
             },
@@ -224,10 +224,14 @@ class SendNotificationOnMentionTestCase(TestCase):
         Test that the send_notification_on_mention task sends a notification to a user 
         when they are mentioned in a comment.
         """
+        self.mention = Mention.objects.create(
+            mentioned_user=self.member,
+            comment=self.comment
+        )
 
         mock_send_notification.assert_called_with(
-            "Mention",
-            "You have been mentioned in a comment",
+            "You have been mentioned",
+            f"You have been mentioned in the task {self.task.name}",
             self.member.profile.expo_push_token
         )
 
@@ -307,6 +311,68 @@ class TaskModelTest(APITestCase):
         Test the creator of the Task model.
         """
         self.assertEqual(self.task.creator, self.user)
+
+
+class TaskSerializerAPITestCase(APITestCase):
+    """
+    Test case for the TaskSerializer class.
+    """
+
+    def setUp(self):
+        """
+        Set up the necessary data for the test case.
+        """
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.user2 = User.objects.create_user(
+            username="testuser2", password="testpassword"
+        )
+        self.user_outside = User.objects.create_user(
+            username="testuser3", password="testpassword"
+        )
+        self.project = Project.objects.create(
+            name="Test Project",
+            description="Test Description",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            owner=self.user,
+        )
+        self.project.users.add(self.user, self.user2)
+        self.task = Task.objects.create(
+            name="Test Task",
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=2),
+            description="Test description",
+            priority="MEDIUM",
+            status="TODO",
+            creator=self.user,
+            project=self.project,
+        )
+        self.task.assigned.add(self.user)
+        self.client.force_authenticate(user=self.user)
+
+    def test_validate_assigned_with_members(self):
+        """
+        Test the validate_assigned method with members of the project.
+        """
+        task_data = {
+            "assigned": [self.user2.pk],
+        }
+        response = self.client.patch(f"/tasks/{self.task.pk}/", task_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_validate_assigned_with_non_members(self):
+        """
+        Test the validate_assigned method with non-members of the project.
+        """
+        task_data = {
+            "assigned": [self.user_outside.pk],
+        }
+        response = self.client.patch(
+            f"/tasks/{self.task.pk}/", task_data)
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
 
 
 class CommentModelTest(APITestCase):
