@@ -31,4 +31,5 @@ class SharedFileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = SharedFile
-        fields = ["file", "uploaded_at", "uploaded_by", "project", "task"]
+        fields = ["url", "file", "uploaded_at",
+                  "uploaded_by", "project", "task"]
