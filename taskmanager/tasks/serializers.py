@@ -12,10 +12,11 @@ Classes:
 import re
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from profiles.serializers import UserSerializer
 from rest_framework import serializers
 
-from .models import Comment, Mention, Task
+from .models import Comment, Mention, Project, Task
 
 
 class MentionSerializer(serializers.ModelSerializer):
@@ -204,7 +205,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     assigned = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=False, queryset=get_user_model().objects.all())
+        many=True, queryset=get_user_model().objects.all())
     creator = UserSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
 
@@ -231,8 +232,31 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
             "status",
             "duration",
             "project",
-            "comments"
+            "comments",
+            "shared_files",
         ]
+
+    def update(self, instance, validated_data):
+        """
+        Updates an existing task instance.
+
+        This method overrides the default update method to add support for assigning users
+        at the current list of users of the task.
+
+        Args:
+            instance (Task): The existing task instance to update.
+            validated_data (dict): The validated data for the updated task.
+
+        Returns:
+            Task: The updated task instance.
+        """
+        if "assigned" in validated_data:
+            existing_users = set(instance.assigned.all())
+            new_users = set(validated_data["assigned"])
+            updated_assigned_users = existing_users.union(new_users)
+            instance.assigned.set(updated_assigned_users)
+            validated_data.pop("assigned")
+        return super().update(instance, validated_data)
 
     def validate(self, attrs):
         """
@@ -248,7 +272,43 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
             dict: The validated data.
 
         """
-        if attrs["start_date"] > attrs["end_date"]:
+        start_date = attrs.get("start_date")
+        end_date = attrs.get("end_date")
+        if start_date and end_date and start_date > end_date:
             raise serializers.ValidationError(
                 "end_date must be after start_date")
         return attrs
+
+    def validate_assigned(self, value):
+        """
+        Validates that all users in the list are members of the project.
+
+        Args:
+            value (list): List of users assigned to the task.
+
+        Returns:
+            list: The validated list of users.
+
+        Raises:
+            serializers.ValidationError: If any user is not a member of the project.
+        """
+        # Attempt to get the project from the request for new tasks
+        project_url = self.context.get('request').data.get('project', None)
+        project = None
+
+        if project_url:
+            project_id = project_url.rstrip('/').split('/')[-1]
+            project = get_object_or_404(Project, id=project_id)
+        elif self.instance and hasattr(self.instance, 'project'):
+            project = self.instance.project
+
+        if not project:
+            raise serializers.ValidationError(
+                "The task must be associated with a project.")
+
+        for user in value:
+            if user not in project.users.all():
+                raise serializers.ValidationError(
+                    "User is not a member of the project")
+
+        return value
