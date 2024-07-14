@@ -11,14 +11,6 @@ from rest_framework import serializers
 
 from .models import Project
 
-# class MinimalSerializer(serializers.HyperlinkedModelSerializer):
-#     sharedfile = serializers.HyperlinkedRelatedField(
-#         view_name='sharedfile-detail', read_only=True)
-
-#     class Meta:
-#         model = Project
-#         fields = ('sharedfile',)
-
 
 class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     """
@@ -45,8 +37,7 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     users = serializers.HyperlinkedRelatedField(
         many=True, view_name="user-detail", read_only=True)
     owner = UserSerializer(read_only=True)
-    sharedfile = serializers.HyperlinkedRelatedField(
-        view_name='sharedfile-detail', read_only=True)
+    shared_files = SharedFileSerializer(many=True, read_only=True)
 
     class Meta:
         """
@@ -55,4 +46,4 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
 
         model = Project
         fields = ["id", "name", "description",
-                  "start_date", "end_date", "users", "owner", "tasks", "sharedfile"]
+                  "start_date", "end_date", "users", "owner", "tasks", "shared_files"]
