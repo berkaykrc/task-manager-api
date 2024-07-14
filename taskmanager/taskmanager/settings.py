@@ -227,6 +227,8 @@ CACHES = {
     }
 }
 
+CACHE_MIDDLEWARE_SECONDS = 60
+
 # Content Security Policy
 
 CSP_IMG_SRC = "'self'"
