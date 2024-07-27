@@ -115,6 +115,33 @@ class TaskViewSetTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_remove_user_from_task(self):
+        """
+        Test the remove user from task functionality.
+        """
+        self.task.assigned.add(self.non_member)
+        response = self.client.post(
+            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": self.non_member.pk})
+        self.task.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(self.non_member, self.task.assigned.all())
+
+    def test_remove_user_from_task_validation_error(self):
+        """
+        Test the remove user from task functionality with validation error.
+        """
+        response = self.client.post(
+            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": "invalid"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_remove_user_from_task_non_existent_user(self):
+        """
+        Test the remove user from task functionality with a non-existent user.
+        """
+        response = self.client.post(
+            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": 1000})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def tearDown(self):
         """
         Clean up the data after the test case.
