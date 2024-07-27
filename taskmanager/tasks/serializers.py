@@ -6,7 +6,10 @@ They specify the fields to be included in the serialized representation of a Tas
 
 Classes:
     TaskSerializer: Serializer class for the Task model.
-
+    CommentSerializer: Serializer class for the Comment model.
+    MentionSerializer: Serializer class for the Mention model.
+    CommentUpdateSerializer: Serializer class for updating a Comment instance.
+    CommentReadSerializer: Serializer class for reading a Comment instance.
 """
 
 import re
@@ -118,7 +121,7 @@ class CommentSerializer(serializers.ModelSerializer):
                 user = get_user_model().objects.get(username=username)
                 Mention.objects.create(mentioned_user=user, comment=comment)
             except get_user_model().DoesNotExist:
-                pass  # If the user does not exist, we simply skip the mention
+                pass
         return comment
 
     def update(self, instance, validated_data):
@@ -167,14 +170,6 @@ class CommentReadSerializer(CommentSerializer):
 
     Inherits:
         CommentSerializer: Base serializer class for the Comment model.
-
-    Example:
-        To use this serializer, create an instance of CommentReadSerializer
-        and pass a Comment object to it:
-
-        >>> comment = Comment.objects.get(id=1)
-        >>> serializer = CommentReadSerializer(comment)
-        >>> serialized_data = serializer.data
     """
     class Meta(CommentSerializer.Meta):
         """
@@ -292,7 +287,6 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
         Raises:
             serializers.ValidationError: If any user is not a member of the project.
         """
-        # Attempt to get the project from the request for new tasks
         project_url = self.context.get('request').data.get('project', None)
         project = None
 
