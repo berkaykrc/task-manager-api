@@ -93,6 +93,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
         model = Comment
         fields = [
+            "url",
             "id",
             "task",
             "created_at",
@@ -191,18 +192,15 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
     serialized representation of a Task object.
 
     Attributes:
-        assigned: A nested UserSerializer instance representing the assigned users.
-        creator: A nested UserSerializer instance representing the creator of the task.
-
+        comments: A nested CommentSerializer instance representing the comments for the task.
+        creator: A HyperlinkedRelatedField instance representing the creator of the task.
     Methods:
         validate: Custom validation method to ensure that the start_date is before the end_date.
 
     """
-
-    assigned = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=get_user_model().objects.all())
-    creator = UserSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
+    creator = serializers.HyperlinkedRelatedField(
+        view_name="user-detail", read_only=True)
 
     class Meta:
         """
