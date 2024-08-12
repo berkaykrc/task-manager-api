@@ -17,7 +17,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('profiles/', include('profiles.urls'))
 """
 
-import debug_toolbar
+from debug_toolbar.toolbar import debug_toolbar_urls
 from dj_rest_auth.views import PasswordResetConfirmView, PasswordResetView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -44,9 +44,13 @@ urlpatterns = [
          PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path("api-auth/", include("dj_rest_auth.urls")),
     path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
-    path("__debug__/", include(debug_toolbar.urls)),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)
+
+if not settings.TESTING:
+    urlpatterns = [
+        *urlpatterns,
+    ] + debug_toolbar_urls()
