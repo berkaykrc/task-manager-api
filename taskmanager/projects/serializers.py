@@ -5,8 +5,6 @@ The ProjectSerializer class is responsible for serializing and deserializing
 Project instances into JSON representations.
 
 """
-from files.serializers import SharedFileSerializer
-from profiles.serializers import UserSerializer
 from rest_framework import serializers
 
 from .models import Project
@@ -36,8 +34,10 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         many=True, view_name="task-detail", read_only=True)
     users = serializers.HyperlinkedRelatedField(
         many=True, view_name="user-detail", read_only=True)
-    owner = UserSerializer(read_only=True)
-    shared_files = SharedFileSerializer(many=True, read_only=True)
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="user-detail", read_only=True)
+    shared_files = serializers.HyperlinkedRelatedField(
+        many=True, read_only=True, view_name="sharedfile-detail")
 
     class Meta:
         """
@@ -45,5 +45,5 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         """
 
         model = Project
-        fields = ["id", "name", "description",
+        fields = ["url", "id", "name", "description",
                   "start_date", "end_date", "users", "owner", "tasks", "shared_files"]
