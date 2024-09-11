@@ -30,14 +30,10 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         fields (list): The fields that should be included in the serialized output.
     """
 
-    tasks = serializers.HyperlinkedRelatedField(
-        many=True, view_name="task-detail", read_only=True)
     users = serializers.HyperlinkedRelatedField(
         many=True, view_name="user-detail", read_only=True)
     owner = serializers.HyperlinkedRelatedField(
         view_name="user-detail", read_only=True)
-    shared_files = serializers.HyperlinkedRelatedField(
-        many=True, read_only=True, view_name="sharedfile-detail")
 
     class Meta:
         """
