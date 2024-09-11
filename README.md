@@ -77,16 +77,18 @@ This project uses Docker to create a reproducible environment that's easy to set
 
 ### Dockerfile
 
-The `Dockerfile` defines the environment for a single Docker container. It specifies the base image, the dependencies, and the commands to run when the container starts. It uses the official Python 3.8 slim-buster image as a base image, sets some environment variables, installs the Python dependencies listed in the `requirements.txt` file, and runs the Django application.
+The `Dockerfile` defines the environment for a single Django server Docker container. It specifies the base image, the dependencies, and the commands to run when the container starts. It uses the official Python 3.8 slim-buster image as a base image, sets some environment variables, installs the Python dependencies listed in the `requirements.txt` file, and runs the Django server.
 
 ### compose.yaml
 
-The `compose.yaml` file defines the services, networks, and volumes for a Docker application. It's used to run multiple Docker containers as a single service. In this project, the `compose.yaml` file defines the services for the Django application, PostgreSQL database, Nginx and, Redis.
+The `compose.yaml` file defines the services, networks, and volumes for a Docker application. It's used to run multiple Docker containers as a single service. In this project, the `compose.yaml` file defines the services for the Django application, PostgreSQL database, Nginx and, Redis for production.
 
 To start the Docker application, run the following command in the same directory as the `compose.yaml` file:
 
 ```sh
-docker-compose up
+docker-compose up 
+or
+docker compose -f compose.yaml up according to your docker version
 ```
 
 ## Built With
@@ -95,7 +97,7 @@ docker-compose up
 - [PostgreSQL](https://www.postgresql.org/) - The relational database used for storing application data. It's known for its performance and standards compliance.
 - [Celery](https://docs.celeryproject.org/en/stable/) - Used for task scheduling and processing. It allows the application to perform tasks asynchronously and schedule recurring tasks.
 - [Redis](https://redis.io/) - Used as a message broker for Celery and as a cache for the Django application. It provides fast in-memory data storage.
-- [Nginx](https://nginx.org/) - Used as a web server and reverse proxy. It handles HTTP requests and serves static files.
+- [Nginx](https://nginx.org/) - Used as a web server and reverse proxy. It handles HTTP requests and serves static&media files.
 - [django-csp](https://pypi.org/project/django-csp/) - Used for adding Content Security Policy headers to the Django application. It helps to prevent cross-site scripting (XSS) attacks.
 - [Simple JWT](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/) - A JSON Web Token authentication plugin for the Django Rest Framework. It's used in this project to handle user authentication. When a user logs in, they receive a JSON Web Token that they can use to authenticate their requests.
 - [django-filter](https://django-filter.readthedocs.io/en/stable/) - Used for creating filters in the Django application. It provides a simple way to filter querysets based on user input.
