@@ -6,8 +6,6 @@ such as assigning a task to a user.
 """
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import decorators, filters, response, status, viewsets
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -63,18 +61,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering = [
         "priority",
     ]
-
-    @method_decorator(cache_page(60))
-    def dispatch(self, *args, **kwargs):
-        """
-        Dispatches the request to the appropriate handler method.
-
-        This method is decorated with cache_page to cache the response for 60 seconds.
-
-        Returns:
-            HttpResponse: The response from the handler method.
-        """
-        return super().dispatch(*args, **kwargs)
 
     def retrieve(self, request, *_args, **_kwargs):
         """
