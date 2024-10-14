@@ -20,7 +20,8 @@ class SharedFileViewSet(viewsets.ModelViewSet):
     A viewset for viewing and editing SharedFile instances.
     """
     serializer_class = SharedFileSerializer
-    queryset = SharedFile.objects.all()
+    queryset = SharedFile.objects.all().prefetch_related(
+        'project', 'task', 'uploaded_by').order_by('id')
 
     def perform_create(self, serializer):
         """
