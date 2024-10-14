@@ -20,10 +20,8 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     data.
 
     Attributes:
-        tasks (TaskSerializer): Serializer for the related Task model.
         users (UserSerializer): Serializer for the related User model.
         owner (UserSerializer): Serializer for the related owner User model.
-        shared_files (SharedFileSerializer): Serializer for the related SharedFile model.
 
     Meta:
         model (Project): The model class that this serializer is associated with.
