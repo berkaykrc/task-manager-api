@@ -16,7 +16,6 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from profiles.serializers import UserSerializer
 from rest_framework import serializers
 
 from .models import Comment, Mention, Project, Task
@@ -46,6 +45,7 @@ class MentionSerializer(serializers.ModelSerializer):
             "mentioned_user",
             "created_at",
         ]
+        read_only_fields = ["created_at"]
 
 
 class CommentUpdateSerializer(serializers.ModelSerializer):
@@ -100,6 +100,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "creator",
             "content",
         ]
+        read_only_fields = ["created_at", "creator"]
 
     def create(self, validated_data):
         """
@@ -228,6 +229,8 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
             "comments",
             "shared_files",
         ]
+
+        read_only_fields = ["creator"]
 
     def update(self, instance, validated_data):
         """

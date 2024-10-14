@@ -88,7 +88,7 @@ class TaskViewSetTestCase(APITestCase):
                 "status": "TODO",
                 "start_date": timezone.now() + timezone.timedelta(days=1),
                 "end_date": timezone.now() + timezone.timedelta(days=2),
-                "assigned": [self.member.pk],
+                "assigned": reverse('user-detail', args=[self.member.pk]),
                 "creator": self.owner.pk,
                 "project": reverse("project-detail", args=[self.project.pk]),
             },
@@ -189,7 +189,7 @@ class SendueDateNotificationTestCase(TestCase):
     @patch('tasks.tasks.send_notification.delay')
     def test_send_due_date_notifications(self, mock_send_notification):
         """
-        Test that the send_due_date_notifications task sends a notification to a user 
+        Test that the send_due_date_notifications task sends a notification to a user
         with a task due tomorrow.
         """
         send_due_date_notifications()
@@ -248,7 +248,7 @@ class SendNotificationOnMentionTestCase(TestCase):
     @patch('tasks.tasks.send_notification.delay')
     def test_send_notification_on_mention(self, mock_send_notification):
         """
-        Test that the send_notification_on_mention task sends a notification to a user 
+        Test that the send_notification_on_mention task sends a notification to a user
         when they are mentioned in a comment.
         """
         self.mention = Mention.objects.create(
@@ -384,7 +384,7 @@ class TaskSerializerAPITestCase(APITestCase):
         Test the validate_assigned method with members of the project.
         """
         task_data = {
-            "assigned": [self.user2.pk],
+            "assigned": reverse('user-detail', args=[self.user2.pk]),
         }
         response = self.client.patch(f"/tasks/{self.task.pk}/", task_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -487,7 +487,6 @@ class CommentViewSetTest(APITestCase):
             "/tasks/comments/",
             {
                 "content": comment_content,
-                "creator": self.user.pk,
                 "task": self.task.pk,
             },
         )

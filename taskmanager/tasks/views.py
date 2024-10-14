@@ -103,7 +103,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         except get_user_model().DoesNotExist:
             return response.Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         if request.user not in task.project.users.all() and request.user != task.project.owner:
-            return response.Response({"error": "User is not a member of the project or owner"}, status=status.HTTP_403_FORBIDDEN)
+            return response.Response({"error": "User is not a member of the project or owner"},
+                                     status=status.HTTP_403_FORBIDDEN)
         task.assigned.add(user)
         task.save()
         return response.Response({
@@ -181,7 +182,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         # Extract the project ID from the URL string
         project_id = project_url.rstrip('/').split('/')[-1]
         project = Project.objects.get(pk=project_id)
-        if self.request.user != project.owner and not project.users.filter(pk=self.request.user.pk).exists():
+        if self.request.user not in {project.owner, *project.users.all()}:
             raise ValidationError("You are not a member of this project")
         serializer.save(creator=self.request.user)
 
@@ -223,10 +224,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsCreatorOrReadOnly, IsProjectMember]
 
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
     def get_serializer_class(self):
         """
         Return the serializer class for the view.
         """
-        if self.action == "list" or self.action == "retrieve":
+        if self.action in ("list", "retrive"):
             return CommentReadSerializer
         return CommentSerializer
