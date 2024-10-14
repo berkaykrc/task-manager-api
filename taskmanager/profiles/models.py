@@ -8,7 +8,8 @@ Attributes:
     save_user_profile (function): Save the profile when the user is saved.
 """
 
-import os
+
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -31,9 +32,9 @@ def validate_image_file_extension(value):
         None
     """
 
-    ext = os.path.splitext(value.name)[1]  # [0] returns path+filename
+    ext = Path(value.name).suffix
     valid_extensions = [".jpg", ".png", ".jpeg", ".gif"]
-    if not ext.lower() in valid_extensions:
+    if ext.lower() not in valid_extensions:
         raise ValidationError("Unsupported file extension.")
 
 
@@ -68,14 +69,17 @@ class Profile(models.Model):
         Returns:
             None
         """
-        storage, path = self.image.storage, self.image.path
-        super(Profile, self).delete(*args, **kwargs)
-        try:
-            storage.delete(path)
-        except FileNotFoundError:
-            print(f"File {path} not found.")
-        except Exception:
-            print("Error deleting file")
+        if self.image and self.image.name:
+            storage, path = self.image.storage, self.image.path
+            super().delete(*args, **kwargs)
+            try:
+                storage.delete(path)
+            except FileNotFoundError:
+                print(f"File {path} not found.")
+            except OSError as e:
+                print(f"OS error occurred while deleting file: {e}")
+        else:
+            super().delete(*args, **kwargs)
 
 
 @receiver(post_save, sender=get_user_model())

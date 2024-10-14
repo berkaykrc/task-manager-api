@@ -12,17 +12,19 @@ To run the tests:
     python manage.py test profiles
 """
 
-import os
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase
 from django.urls import reverse
 from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Profile
+from .models import Profile, validate_image_file_extension
 
 User = get_user_model()
 
@@ -88,6 +90,7 @@ class ProfileViewSetTestCase(APITestCase):
         """
 
         response = self.client.get("/profiles/")
+        self.assertTrue(response.data['count'] > 0)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_retrieve_profile(self):
@@ -231,6 +234,10 @@ class ProfileViewSetTestCase(APITestCase):
         response = self.client.delete(f"/profiles/{self.user.profile.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Profile.objects.filter(user=self.user).exists())
+        self.assertEqual(response.data['message'],
+                         'Profile deleted successfully.')
+        self.assertEqual(response.data['profile_id'], self.user.profile.id)
+        self.assertEqual(response.data['user_id'], self.user.id)
 
     def test_set_expo_push_token(self):
         """
@@ -276,7 +283,51 @@ class ProfileViewSetTestCase(APITestCase):
     def tearDown(self):
         self.client.logout()
         self.image_file.close()
-        os.remove(self.image_file_path)
+        Path(self.image_file_path).unlink()
+        super().tearDown()
+
+
+class TestValidateImageFileExtension(TestCase):
+    """
+    Test case for the validate_image_file_extension function.
+
+    This test case class contains test methods to verify the functionality of the validate_image_file_extension function.
+    It includes tests for validating the file extension of an image file.
+    """
+
+    def setUp(self):
+        self.image_file = SimpleUploadedFile(
+            name='test_image.jpg',
+            content=b'',
+            content_type='image/jpeg'
+        )
+
+    def test_valid_image_file_extension(self):
+        """
+        Test case for a valid image file extension.
+
+        This test case method tests the functionality of the validate_image_file_extension function
+        by passing a valid image file extension.
+
+        It asserts that the function does not raise any exceptions.
+        """
+        validate_image_file_extension(self.image_file)
+
+    def test_invalid_image_file_extension(self):
+        """
+        Test case for an invalid image file extension.
+
+        This test case method tests the functionality of the validate_image_file_extension function
+        by passing an invalid image file extension.
+
+        It asserts that the function raises a ValidationError exception.
+        """
+        self.image_file.name = 'test_image.txt'
+        with self.assertRaises(ValidationError):
+            validate_image_file_extension(self.image_file)
+
+    def tearDown(self):
+        self.image_file.close()
         super().tearDown()
 
 
@@ -374,7 +425,6 @@ class GroupViewSetTestCase(APITestCase):
 
     def tearDown(self):
         self.client.logout()
-        self.client.force_authentication(user=None)
         super().tearDown()
 
 

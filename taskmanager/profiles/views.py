@@ -35,6 +35,37 @@ class ProfileViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsUserOrReadOnly, IsAuthenticated]
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        Destroy a profile.
+
+        Args:
+            request: HTTP request.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+        Returns:
+            Response: The http response indicating the result of the operation.
+        """
+        instance = self.get_object()
+        profile_id = instance.id
+        user_id = instance.user.id
+        self.perform_destroy(instance)
+        return Response({
+            'message': 'Profile deleted successfully.',
+            'profile_id': profile_id,
+            'user_id': user_id
+
+        }, status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        """
+        Perform the destroy operation.
+
+        Args:
+            instance: The profile instance to be deleted.
+        """
+        instance.delete()
+
     @action(detail=True, methods=['patch'])
     def set_expo_push_token(self, request):
         """
@@ -57,7 +88,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         profile.expo_push_token = expo_push_token
         profile.save()
 
-        return Response({'message': 'Expo push token set successfully.'})
+        return Response({'message': 'Expo push token set successfully.'}, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -84,17 +115,6 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUser]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers,
-        )
 
 
 class RegisterView(APIView):
