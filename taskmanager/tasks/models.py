@@ -31,7 +31,7 @@ def validate_start_date(value):
     Raises:
         ValidationError: If the start date is in the past.
     """
-    if value < timezone.now():
+    if value <= timezone.now():
         raise ValidationError("Start date cannot be in the past")
 
 
@@ -45,7 +45,7 @@ def validate_end_date(value):
     Raises:
         ValidationError: If the end date is in the past.
     """
-    if value < timezone.now():
+    if value <= timezone.now():
         raise ValidationError("End date cannot be in the past")
 
 
