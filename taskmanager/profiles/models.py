@@ -59,27 +59,13 @@ class Profile(models.Model):
         return f"{self.user.get_username()} Profile"
 
     def delete(self, *args, **kwargs):
-        """
-        Delete the profile.
-
-        Args:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-
-        Returns:
-            None
-        """
         if self.image and self.image.name:
             storage, path = self.image.storage, self.image.path
-            super().delete(*args, **kwargs)
             try:
                 storage.delete(path)
-            except FileNotFoundError:
-                print(f"File {path} not found.")
-            except OSError as e:
-                print(f"OS error occurred while deleting file: {e}")
-        else:
-            super().delete(*args, **kwargs)
+            except (FileNotFoundError, OSError) as e:
+                print(f"Error deleting file {path}: {e}")
+        super().delete(*args, **kwargs)
 
 
 @receiver(post_save, sender=get_user_model())
