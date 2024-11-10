@@ -26,6 +26,7 @@ from django.urls import include, path
 from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
 from profiles.views import LoginView, RegisterView
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .views import APIRootView
 
@@ -43,6 +44,7 @@ urlpatterns = [
     path('password-reset-confirm/<uidb64>/<token>/',
          PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path("api-auth/", include("dj_rest_auth.urls")),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ]
 
