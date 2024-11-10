@@ -76,7 +76,11 @@ class Project(models.Model):
             models.CheckConstraint(
                 check=models.Q(start_date__lte=models.F("end_date")),
                 name="project_start_date_lte_end_date",
+                violation_error_message="Start date must be less than or equal to end date.",
             ),
-            models.CheckConstraint(check=models.Q(
-                end_date__gte=models.F("start_date")), name="project_end_date_gte_start_date"),
+            models.CheckConstraint(
+                check=models.Q(end_date__gte=models.F("start_date")),
+                name="project_end_date_gte_start_date",
+                violation_error_message="End date must be greater than or equal to start date.",
+            ),
         ]
