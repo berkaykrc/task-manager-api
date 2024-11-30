@@ -24,8 +24,15 @@ django-csp = "3.7"
 graphene-django = "3.2.0"
 django-graphql-jwt = "0.4.0"
 dj-rest-auth = "5.0.2"
+ipdb = "^0.13.13"
 
+
+[tool.poetry.group.dev.dependencies]
+faker = "^33.1.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# fixme: add typings, mypy to project
+# fixme: add isort package

@@ -130,21 +130,37 @@ TEMPLATES = [
 WSGI_APPLICATION = "taskmanager.wsgi.application"
 
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
         },
     },
-    "loggers": {
-        "taskmanager.projects.views": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
         },
     },
-
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'your_app': {  # Replace 'your_app' with the name of your app
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }
 
 # Database
