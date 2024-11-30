@@ -14,6 +14,9 @@ from tasks.models import Task
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
+# fixme: update all typings.
+
+
 def validate_file_extension_and_content(value):
     """
     Validates the file extension and content of the uploaded file.

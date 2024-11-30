@@ -38,7 +38,8 @@ source .venv/bin/activate
 4. Install the required packages:
 
 ```sh
-pip install -r requirements.txt
+pip install poetry
+poetry install
 ```
 
 5. Copy the sample environment file and modify it according to your local settings:
@@ -77,7 +78,7 @@ This project uses Docker to create a reproducible environment that's easy to set
 
 ### Dockerfile
 
-The `Dockerfile` defines the environment for a single Django server Docker container. It specifies the base image, the dependencies, and the commands to run when the container starts. It uses the official Python 3.8 slim-buster image as a base image, sets some environment variables, installs the Python dependencies listed in the `requirements.txt` file, and runs the Django server.
+The `Dockerfile` defines the environment for a single Django server Docker container. It specifies the base image, the dependencies, and the commands to run when the container starts. It uses the official Python 3.8 slim-buster image as a base image, sets some environment variables, installs the Python dependencies listed in the pyproject.toml, and runs the Django server.
 
 ### compose.yaml
 

@@ -8,9 +8,10 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /usr/src/app
 
 # Install dependencies
-COPY requirements.txt ./
+COPY pyproject.toml ./
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install poetry
+RUN poetry install
 
 COPY taskmanager .
 
