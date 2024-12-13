@@ -11,40 +11,33 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: taskmanager_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:6
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+      services:
+        redis:
+          image: redis:6
+          ports:
+            - 6379:6379
+          options: >-
+            --health-cmd "redis-cli ping"
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
+      -name: Start PostgreSQL
+        run: | 
+        sudo systemctl start postgresql.service
+
+      - name: Set environment variables for PostgreSQL
+        run: |
+          echo "POSTGRES_DB=test_db" >> $GITHUB_ENV
+          echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=" >> $GITHUB_ENV  # Leave empty or specify a password if needed
+          echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+
 
       - name: Cache pip
         uses: actions/cache@v3
@@ -59,37 +52,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Redis CLI
+        run: sudo apt-get install -y redis-tools
+
       - name: Wait for PostgreSQL
         run: |
-          until pg_isready -h localhost -p 5432; do
+          timeout 60s bash -c 'until pg_isready -h localhost -p 5432; do
             echo "Waiting for PostgreSQL..."
             sleep 2
-          done
+          done'
 
       - name: Wait for Redis
         run: |
-          until redis-cli -h localhost ping; do
+          timeout 60s bash -c 'until redis-cli -h localhost ping; do
             echo "Waiting for Redis..."
             sleep 2
-          done
+          done'
 
       - name: Run Migrations
-        env:
-          POSTGRES_DB: taskmanager_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
         run: |
           python manage.py migrate
 
       - name: Run Unit Tests
         env:
-          POSTGRES_DB: taskmanager_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
           REDIS_URL: redis://localhost:6379/0
         run: |
           python manage.py test
