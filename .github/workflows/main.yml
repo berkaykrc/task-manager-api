@@ -23,18 +23,14 @@ jobs:
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
-      - name: Set environment variables for PostgreSQL
-        run: >
+      - name: Set environment variables for PostgreSQL and Redis
+        run: |
           echo "POSTGRES_DB=test_db" >> $GITHUB_ENV
-
           echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
-
-          echo "POSTGRES_PASSWORD=" >> $GITHUB_ENV  # Leave empty or specify a
-          password if needed
-
+          echo "POSTGRES_PASSWORD=" >> $GITHUB_ENV  # Leave empty or specify a password if needed
           echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
-
           echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+          echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
       - name: Cache pip
         uses: actions/cache@v3
         with:
@@ -62,6 +58,8 @@ jobs:
           done'
       - name: Run Migrations
         working-directory: taskmanager
+        env:
+          REDIS_URL: 'redis://localhost:6379/0'
         run: |
           python manage.py migrate
       - name: Run Unit Tests
