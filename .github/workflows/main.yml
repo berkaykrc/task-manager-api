@@ -26,9 +26,12 @@ jobs:
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
+      - name: Set up PostgreSQL user password
+        run: |
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD '
       - name: Set environment variables for PostgreSQL and Redis
         run: |
-          echo "POSTGRES_DB=test_db" >> $GITHUB_ENV
+          echo "POSTGRES_DB=postgres" >> $GITHUB_ENV
           echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
           echo "POSTGRES_PASSWORD=postgres" >> $GITHUB_ENV  # Leave empty or specify a password if needed
           echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
