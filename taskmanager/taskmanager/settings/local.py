@@ -62,5 +62,3 @@ DATABASES = {
         "PORT": env("POSTGRES_PORT"),
     },
 }
-
-CSP_REPORT_URI = ""

@@ -207,7 +207,7 @@ CSP_FONT_SRC = (
     "https://cdn.jsdelivr.net",
 )
 
-CSP_REPORT_URI = env("CSP_REPORT_URI")
+CSP_REPORT_URI = env("CSP_REPORT_URI", default="")
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
