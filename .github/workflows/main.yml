@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DJANGO_SETTINGS_MODULE: 'taskmanager.settings.local'
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
     services:
       redis:
         image: 'redis:6'
