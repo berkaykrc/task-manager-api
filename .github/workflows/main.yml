@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "POSTGRES_DB=test_db" >> $GITHUB_ENV
           echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
-          echo "POSTGRES_PASSWORD=" >> $GITHUB_ENV  # Leave empty or specify a password if needed
+          echo "POSTGRES_PASSWORD=postgres" >> $GITHUB_ENV  # Leave empty or specify a password if needed
           echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
           echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
           echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
