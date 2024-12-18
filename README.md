@@ -8,8 +8,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-- Python 3.8+
-- Django 3.2+
+- Python 3.10+
+- Django 4.2+
 - PostgreSQL 13.0+
 - Celery 5.0+
 - Redis 6.0+
@@ -45,7 +45,7 @@ poetry install
 5. Copy the sample environment file and modify it according to your local settings:
 
 ```sh
-cp taskmanager/taskmanager/.env.dist taskmanager/taskmanager/.env
+cp taskmanager/.env.dist /taskmanager/.env
 ```
 
 6. Run the Django migrations to set up your models:
@@ -89,8 +89,9 @@ To start the Docker application, run the following command in the same directory
 ```sh
 docker-compose up 
 or
-docker compose -f compose.yaml up according to your docker version
+docker compose -f compose.yaml up 
 ```
+according to your docker version
 
 ## Built With
 
