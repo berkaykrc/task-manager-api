@@ -18,7 +18,7 @@ from celery.schedules import crontab
 
 env = environ.Env()
 environ.Env.read_env()
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "taskmanager.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "taskmanager.settings.local")
 
 app = Celery("taskmanager", backend=env("REDIS_URL"), broker=env("REDIS_URL"))
 app.config_from_object("django.conf:settings", namespace="CELERY")
