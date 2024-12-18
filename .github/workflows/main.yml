@@ -9,6 +9,8 @@ name: ci
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: 'taskmanager.settings.local'
     services:
       redis:
         image: 'redis:6'
