@@ -15,7 +15,7 @@ from pathlib import Path
 
 import environ
 
-env = environ.Env()
+env = environ.Env(CSP_REPORT_URI=(str, None))
 environ.Env.read_env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -107,11 +107,15 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["console"],
-            "level": "INFO",
+            "level": "DEBUG",
             "propagate": True,
         },
-    },
-
+        "taskmanager.profiles.management.commands.create_user": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    }
 }
 
 DATABASES = {
@@ -207,7 +211,7 @@ CSP_FONT_SRC = (
     "https://cdn.jsdelivr.net",
 )
 
-CSP_REPORT_URI = env("CSP_REPORT_URI", default="")
+CSP_REPORT_URI = env("CSP_REPORT_URI")
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

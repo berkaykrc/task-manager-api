@@ -12,12 +12,14 @@ To run the tests:
     python manage.py test profiles
 """
 
+from io import StringIO
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.test import TestCase
 from django.urls import reverse
 from PIL import Image
@@ -720,4 +722,51 @@ class UserViewSetTestCase(APITestCase):
     def tearDown(self):
         self.client.logout()
         self.client.force_authenticate(user=None)
+        super().tearDown()
+
+
+class PopulateDBCommandTest(TestCase):
+    """
+    Test case for the populate_db management command.
+
+    This test case class contains test methods to verify the functionality of the populate_db management command.
+    It includes tests for creating users and profiles in the database.
+    """
+
+    def test_populate_db_command(self):
+        """
+        Test case for the populate_db management command.
+
+        This test case method tests the functionality of the populate_db management command
+        by calling the command and asserting that the users and profiles have been successfully created.
+        """
+        out = StringIO()
+        call_command('populate_db', '10', stdout=out)
+        self.assertEqual(User.objects.count(), 10)
+        self.assertEqual(Profile.objects.count(), 10)
+        self.assertIn('Successfully created all users', out.getvalue())
+
+    def test_invalid_count_argument(self):
+        """
+        Test case for an invalid count argument.
+
+        This test case method tests the functionality of the populate_db management command
+        by calling the command with an invalid count argument and asserting that a CommandError exception is raised.
+        """
+        with self.assertRaises(CommandError):
+            call_command('populate_db', 'invalid_count')
+
+    def test_no_count_argument(self):
+        """
+        Test case for no count argument.
+
+        This test case method tests the functionality of the populate_db management command
+        by calling the command without a count argument and asserting that a CommandError exception is raised.
+        """
+        with self.assertRaises(CommandError):
+            call_command('populate_db')
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Profile.objects.all().delete()
         super().tearDown()

@@ -18,13 +18,23 @@ jobs:
         ports:
           - '6379:6379'
         options: >-
-          --health-cmd "redis-cli ping" --health-interval 10s --health-timeout
-          5s --health-retries 5
+          --health-cmd "redis-cli ping" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - name : Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache : 'poetry'
       - name: Start PostgreSQL
         run: |
+          pwd
           sudo systemctl start postgresql.service
       - name: Set up PostgreSQL user password
         run: |
@@ -37,17 +47,10 @@ jobs:
           echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
           echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
           echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: '${{ runner.os }}-pip-${{ hashFiles(''**/requirements.txt'') }}'
-          restore-keys: |
-            ${{ runner.os }}-pip-
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pwd
+          poetry install --no-root
       - name: Install Redis CLI
         run: sudo apt-get install -y redis-tools
       - name: Wait for PostgreSQL
@@ -64,15 +67,14 @@ jobs:
           done'
       - name: Run Migrations
         working-directory: taskmanager
-        env:
-          REDIS_URL: 'redis://localhost:6379/0'
         run: |
-          python manage.py migrate
+          pwd
+          poetry run python manage.py migrate
       - name: Run Unit Tests
-        env:
-          REDIS_URL: 'redis://localhost:6379/0'
+        working-directory: taskmanager
         run: |
-          python taskmanager/manage.py test
+          pwd
+          poetry run python manage.py test
   build-and-push:
     runs-on: ubuntu-latest
     needs: test
