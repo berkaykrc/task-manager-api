@@ -25,15 +25,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Start PostgreSQL
-        run: |
-          pwd
-          sudo systemctl start postgresql.service
+      - name: Install poetry
+        run: pipx install poetry
       - name : Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache : 'poetry'
+      - name: Start PostgreSQL
+        run: |
+          pwd
+          sudo systemctl start postgresql.service
       - name: Set up PostgreSQL user password
         run: |
           sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
@@ -48,7 +50,6 @@ jobs:
       - name: Install dependencies
         run: |
           pwd
-          python -m pip install --upgrade pip
           poetry install --no-root
       - name: Install Redis CLI
         run: sudo apt-get install -y redis-tools
