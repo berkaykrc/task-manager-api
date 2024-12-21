@@ -46,12 +46,12 @@ jobs:
           path: ~/.cache/pip
           key: '${{ runner.os }}-pip-${{ hashFiles(''**/requirements.txt'') }}'
           restore-keys: |
-            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-pip-
       - name: Install dependencies
         run: |
           pwd
           python -m pip install --upgrade pip
-          pip install requirements.txt
+          pip install -r requirements.txt
       - name: Install Redis CLI
         run: sudo apt-get install -y redis-tools
       - name: Wait for PostgreSQL
