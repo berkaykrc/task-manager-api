@@ -18,16 +18,13 @@ jobs:
         ports:
           - '6379:6379'
         options: >-
-          --health-cmd "redis-cli ping" 
-          --health-interval 10s 
-          --health-timeout 5s 
-          --health-retries 5
+          --health-cmd "redis-cli ping" --health-interval 10s --health-timeout
+          5s --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Start PostgreSQL
         run: |
-          pwd
           sudo systemctl start postgresql.service
       - name: Set up PostgreSQL user password
         run: |
@@ -44,15 +41,13 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: '${{ runner.os }}-poetry-${{ hashFiles(''**/poetry.lock'') }}'
+          key: '${{ runner.os }}-pip-${{ hashFiles(''**/requirements.txt'') }}'
           restore-keys: |
-            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-pip-
       - name: Install dependencies
         run: |
-          pwd
           python -m pip install --upgrade pip
-          pip install poetry
-          poetry install
+          pip install -r requirements.txt
       - name: Install Redis CLI
         run: sudo apt-get install -y redis-tools
       - name: Wait for PostgreSQL
@@ -69,15 +64,15 @@ jobs:
           done'
       - name: Run Migrations
         working-directory: taskmanager
+        env:
+          REDIS_URL: 'redis://localhost:6379/0'
         run: |
-          pwd
           python manage.py migrate
       - name: Run Unit Tests
-        working-directory: taskmanager
         env:
+          REDIS_URL: 'redis://localhost:6379/0'
         run: |
-          pwd
-          python manage.py test
+          python taskmanager/manage.py test
   build-and-push:
     runs-on: ubuntu-latest
     needs: test
