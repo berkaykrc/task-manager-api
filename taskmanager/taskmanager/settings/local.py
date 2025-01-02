@@ -49,8 +49,15 @@ TEMPLATES += [
 
 WSGI_APPLICATION = "taskmanager.wsgi.application"
 
-LOGGING["handlers"]["console"]["formatter"] = "verbose"
-LOGGING["loggers"]["django"]["level"] = "INFO"
+if TESTING:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+    }
+else:
+    LOGGING["handlers"]["console"]["formatter"] = "verbose"
+    LOGGING["loggers"]["django"]["level"] = "INFO"
+
 
 DATABASES = {
     "default": {

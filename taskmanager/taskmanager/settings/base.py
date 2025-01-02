@@ -84,39 +84,45 @@ TESTING = "test" in sys.argv
 
 WSGI_APPLICATION = "taskamanager.wsgi.application"
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
-            "style": "{",
-        },
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-            "level": "DEBUG",
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "taskmanager.profiles.management.commands.create_user": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
+if TESTING:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
     }
-}
+else:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+                "style": "{",
+            },
+            "simple": {
+                "format": "{levelname} {message}",
+                "style": "{",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "simple",
+                "level": "DEBUG",
+            },
+        },
+        "loggers": {
+            "django": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
+            "taskmanager.profiles.management.commands.create_user": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
+        }
+    }
 
 DATABASES = {
 }
