@@ -58,7 +58,8 @@ class ProfileViewSetTestCase(APITestCase):
             self.image = SimpleUploadedFile(
                 name=self.image_file.name,
                 content=self.image_file.read(),
-                content_type='image/jpeg')
+                content_type="image/jpeg",
+            )
         self.client.force_authenticate(user=self.user)
 
     def test_authorization_is_enforced(self):
@@ -92,7 +93,7 @@ class ProfileViewSetTestCase(APITestCase):
         """
 
         response = self.client.get("/profiles/")
-        self.assertTrue(response.data['count'] > 0)
+        self.assertTrue(response.data["count"] > 0)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_retrieve_profile(self):
@@ -143,10 +144,10 @@ class ProfileViewSetTestCase(APITestCase):
         data = {
             "user": reverse("user-detail", kwargs={"pk": self.user.pk}),
             "image": self.image,
-            "expo_push_token": "test_token"
+            "expo_push_token": "test_token",
         }
         response = self.client.put(
-            f"/profiles/{self.user.profile.id}/", data, format='multipart'
+            f"/profiles/{self.user.profile.id}/", data, format="multipart"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Profile.objects.filter(user=self.user).exists())
@@ -163,15 +164,16 @@ class ProfileViewSetTestCase(APITestCase):
         Returns:
             None.
         """
-        data = {
-            "expo_push_token": "test_token"
-        }
+        data = {"expo_push_token": "test_token"}
         response = self.client.patch(
-            f"/profiles/{self.user.profile.id}/", data, format='json'
+            f"/profiles/{self.user.profile.id}/", data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Profile.objects.filter(
-            user=self.user, expo_push_token="test_token").exists())
+        self.assertTrue(
+            Profile.objects.filter(
+                user=self.user, expo_push_token="test_token"
+            ).exists()
+        )
 
     def test_update_profile_with_invalid_data(self):
         """
@@ -188,10 +190,10 @@ class ProfileViewSetTestCase(APITestCase):
         data = {
             "user": reverse("user-detail", kwargs={"pk": self.user.pk}),
             "image": "test_image.jpeg",
-            "expo_push_token": "test_token"
+            "expo_push_token": "test_token",
         }
         response = self.client.put(
-            f"/profiles/{self.user.profile.id}/", data, format='json'
+            f"/profiles/{self.user.profile.id}/", data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -214,10 +216,10 @@ class ProfileViewSetTestCase(APITestCase):
         data = {
             "user": reverse("user-detail", kwargs={"pk": other_user.pk}),
             "image": self.image,
-            "expo_push_token": "test_token"
+            "expo_push_token": "test_token",
         }
         response = self.client.put(
-            f"/profiles/{other_user.profile.id}/", data, format='multipart'
+            f"/profiles/{other_user.profile.id}/", data, format="multipart"
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -236,10 +238,9 @@ class ProfileViewSetTestCase(APITestCase):
         response = self.client.delete(f"/profiles/{self.user.profile.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Profile.objects.filter(user=self.user).exists())
-        self.assertEqual(response.data['message'],
-                         'Profile deleted successfully.')
-        self.assertEqual(response.data['profile_id'], self.user.profile.id)
-        self.assertEqual(response.data['user_id'], self.user.id)
+        self.assertEqual(response.data["message"], "Profile deleted successfully.")
+        self.assertEqual(response.data["profile_id"], self.user.profile.id)
+        self.assertEqual(response.data["user_id"], self.user.id)
 
     def test_set_expo_push_token(self):
         """
@@ -253,15 +254,16 @@ class ProfileViewSetTestCase(APITestCase):
         Returns:
             None.
         """
-        data = {
-            "expo_push_token": "test_token"
-        }
+        data = {"expo_push_token": "test_token"}
         response = self.client.patch(
-            f"/profiles/{self.user.profile.id}/", data, format='json'
+            f"/profiles/{self.user.profile.id}/", data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Profile.objects.filter(
-            user=self.user, expo_push_token="test_token").exists())
+        self.assertTrue(
+            Profile.objects.filter(
+                user=self.user, expo_push_token="test_token"
+            ).exists()
+        )
 
     def test_pagination(self):
         """
@@ -299,9 +301,7 @@ class TestValidateImageFileExtension(TestCase):
 
     def setUp(self):
         self.image_file = SimpleUploadedFile(
-            name='test_image.jpg',
-            content=b'',
-            content_type='image/jpeg'
+            name="test_image.jpg", content=b"", content_type="image/jpeg"
         )
 
     def test_valid_image_file_extension(self):
@@ -324,7 +324,7 @@ class TestValidateImageFileExtension(TestCase):
 
         It asserts that the function raises a ValidationError exception.
         """
-        self.image_file.name = 'test_image.txt'
+        self.image_file.name = "test_image.txt"
         with self.assertRaises(ValidationError):
             validate_image_file_extension(self.image_file)
 
@@ -343,10 +343,11 @@ class GroupViewSetTestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create(
-            username="testuser", password="testuserpassword", is_staff=True)
+            username="testuser", password="testuserpassword", is_staff=True
+        )
         self.group = Group.objects.create(name="Test Group")
         self.user.groups.add(self.group)
-        self.url = reverse('group-detail', kwargs={'pk': self.group.pk})
+        self.url = reverse("group-detail", kwargs={"pk": self.group.pk})
         self.client.force_authenticate(user=self.user)
 
     def test_authorization_is_enforced(self):
@@ -392,7 +393,7 @@ class GroupViewSetTestCase(APITestCase):
         This test case method verifies that only admin users can access the GroupViewSet
         """
         response = self.client.get("/profiles/groups/")
-        self.assertIn("name", response.data['results'][0])
+        self.assertIn("name", response.data["results"][0])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_group(self):
@@ -402,28 +403,27 @@ class GroupViewSetTestCase(APITestCase):
         This test case method tests the functionality of updating a group by sending a PATCH request
         to the specified URL with the update data.
 
-        It asserts that the response status code is 200 (OK) 
+        It asserts that the response status code is 200 (OK)
         and checks if the group's name has been successfully updated.
         """
-        update_data = {'name': 'Updated Test Group'}
+        update_data = {"name": "Updated Test Group"}
         response = self.client.patch(self.url, update_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.group.refresh_from_db()
-        self.assertEqual(self.group.name, 'Updated Test Group')
+        self.assertEqual(self.group.name, "Updated Test Group")
 
     def test_delete_group(self):
         """
         Test case to verify the deletion of a group.
 
-        This test case method sends a DELETE request to the specified URL 
+        This test case method sends a DELETE request to the specified URL
         and asserts that the response status code is 204 (NO CONTENT).
         It also asserts that the Group.DoesNotExist exception
         is raised when attempting to retrieve the group from the database.
         """
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertRaises(Group.DoesNotExist,
-                          Group.objects.get, pk=self.group.pk)
+        self.assertRaises(Group.DoesNotExist, Group.objects.get, pk=self.group.pk)
 
     def tearDown(self):
         self.client.logout()
@@ -474,8 +474,7 @@ class UserRegistrationTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue("refresh" in response.data)
         self.assertTrue("access" in response.data)
-        self.assertTrue(get_user_model().objects.filter(
-            username="testuser").exists())
+        self.assertTrue(get_user_model().objects.filter(username="testuser").exists())
 
     def test_register_with_existing_username(self):
         """
@@ -495,7 +494,8 @@ class UserRegistrationTestCase(APITestCase):
                 "username": self.user.username,
                 "email": self.user.email,
                 "password": self.user.password,
-            },)
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_with_existing_email(self):
@@ -516,7 +516,8 @@ class UserRegistrationTestCase(APITestCase):
                 "username": "testuser",
                 "email": self.user.email,
                 "password": "testpassword",
-            },)
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_with_invalid_email(self):
@@ -537,7 +538,8 @@ class UserRegistrationTestCase(APITestCase):
                 "username": "testuser",
                 "email": "testmail.com",
                 "password": "testpassword",
-            },)
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_with_invalid_data(self):
@@ -558,7 +560,8 @@ class UserRegistrationTestCase(APITestCase):
                 "username": "",
                 "email": "notmail",
                 "password": "s",
-            },)
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
@@ -717,7 +720,7 @@ class UserViewSetTestCase(APITestCase):
         """
         response = self.client.get(f"/profiles/users/{self.user.pk}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], self.user.username)
+        self.assertEqual(response.data["username"], self.user.username)
 
     def tearDown(self):
         self.client.logout()
@@ -741,10 +744,10 @@ class PopulateDBCommandTest(TestCase):
         by calling the command and asserting that the users and profiles have been successfully created.
         """
         out = StringIO()
-        call_command('populate_db', '10', stdout=out)
+        call_command("populate_db", "10", stdout=out)
         self.assertEqual(User.objects.count(), 10)
         self.assertEqual(Profile.objects.count(), 10)
-        self.assertIn('Successfully created all users', out.getvalue())
+        self.assertIn("Successfully created all users", out.getvalue())
 
     def test_invalid_count_argument(self):
         """
@@ -754,7 +757,7 @@ class PopulateDBCommandTest(TestCase):
         by calling the command with an invalid count argument and asserting that a CommandError exception is raised.
         """
         with self.assertRaises(CommandError):
-            call_command('populate_db', 'invalid_count')
+            call_command("populate_db", "invalid_count")
 
     def test_no_count_argument(self):
         """
@@ -764,7 +767,7 @@ class PopulateDBCommandTest(TestCase):
         by calling the command without a count argument and asserting that a CommandError exception is raised.
         """
         with self.assertRaises(CommandError):
-            call_command('populate_db')
+            call_command("populate_db")
 
     def tearDown(self):
         User.objects.all().delete()

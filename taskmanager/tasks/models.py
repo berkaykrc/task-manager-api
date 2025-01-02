@@ -83,17 +83,14 @@ class Task(models.Model):
         ("MEDIUM", "Medium"),
         ("LOW", "Low"),
     ]
-    priority = models.CharField(
-        max_length=6, choices=PRIORITY_CHOICES, default="LOW")
+    priority = models.CharField(max_length=6, choices=PRIORITY_CHOICES, default="LOW")
     STATUS_CHOICES = [
         ("TODO", "To Do"),
         ("INPROGRESS", "In Progress"),
         ("DONE", "Done"),
     ]
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="TODO")
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="tasks")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="TODO")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
     assigned = models.ManyToManyField(User, related_name="tasks")
     creator = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="created_tasks"
@@ -165,10 +162,8 @@ class Comment(models.Model):
         content (TextField): The content of the comment.
     """
 
-    task = models.ForeignKey(
-        Task, on_delete=models.CASCADE, related_name="comments")
-    creator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="comments")
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
 
@@ -191,9 +186,11 @@ class Mention(models.Model):
     """
 
     comment = models.ForeignKey(
-        Comment, on_delete=models.CASCADE, related_name="mentions")
+        Comment, on_delete=models.CASCADE, related_name="mentions"
+    )
     mentioned_user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="mentions")
+        User, on_delete=models.CASCADE, related_name="mentions"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

@@ -35,5 +35,5 @@ app.conf.beat_schedule = {
     "send_due_date_notifications": {
         "task": "tasks.tasks.send_due_date_notifications",
         "schedule": crontab(minute="7", hour="23"),
-    }
+    },
 }

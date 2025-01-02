@@ -19,9 +19,13 @@ class SharedFileViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing SharedFile instances.
     """
+
     serializer_class = SharedFileSerializer
-    queryset = SharedFile.objects.all().prefetch_related(
-        'project', 'task', 'uploaded_by').order_by('id')
+    queryset = (
+        SharedFile.objects.all()
+        .prefetch_related("project", "task", "uploaded_by")
+        .order_by("id")
+    )
 
     def perform_create(self, serializer):
         """
@@ -34,14 +38,11 @@ class SharedFileViewSet(viewsets.ModelViewSet):
         task = self.get_task()
 
         if task and task.project != project:
-            raise ValidationError(
-                'The task does not belong to the project')
+            raise ValidationError("The task does not belong to the project")
         try:
-            serializer.save(uploaded_by=self.request.user,
-                            project=project, task=task)
+            serializer.save(uploaded_by=self.request.user, project=project, task=task)
         except Exception as exc:
-            raise ValidationError(
-                'An error occurred while creating the file.') from exc
+            raise ValidationError("An error occurred while creating the file.") from exc
 
     def get_project(self):
         """
@@ -50,14 +51,15 @@ class SharedFileViewSet(viewsets.ModelViewSet):
         Returns:
             Project: The project associated with the file.
         """
-        project_url = self.request.data.get('project')
+        project_url = self.request.data.get("project")
         if project_url:
-            project_id = resolve(project_url).kwargs.get('pk')
+            project_id = resolve(project_url).kwargs.get("pk")
             try:
                 project = Project.objects.get(id=project_id)
             except Project.DoesNotExist as exc:
                 raise ValidationError(
-                    'There is no Project with this ID to relate to the file') from exc
+                    "There is no Project with this ID to relate to the file"
+                ) from exc
             return project
         return None
 
@@ -68,13 +70,14 @@ class SharedFileViewSet(viewsets.ModelViewSet):
         Returns:
             Task: The task associated with the file.
         """
-        task_url = self.request.data.get('task')
+        task_url = self.request.data.get("task")
         if task_url:
-            task_id = resolve(task_url).kwargs.get('pk')
+            task_id = resolve(task_url).kwargs.get("pk")
             try:
                 task = Task.objects.get(id=task_id)
             except Task.DoesNotExist as exc:
                 raise ValidationError(
-                    'There is no Task with this ID to relate to project') from exc
+                    "There is no Task with this ID to relate to project"
+                ) from exc
             return task
         return None

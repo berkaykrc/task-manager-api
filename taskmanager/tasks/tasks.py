@@ -35,18 +35,22 @@ def send_notification(subject, message, expo_push_token):
     try:
         logger.info("Sending notification to %s", expo_push_token)
         response = PushClient().publish(
-            PushMessage(to=expo_push_token, body=message, title=subject,
-                        data=None,
-                        sound=None,
-                        ttl=None,
-                        expiration=None,
-                        priority=None,
-                        badge=None,
-                        category=None,
-                        display_in_foreground=None,
-                        channel_id=None,
-                        subtitle=None,
-                        mutable_content=None)
+            PushMessage(
+                to=expo_push_token,
+                body=message,
+                title=subject,
+                data=None,
+                sound=None,
+                ttl=None,
+                expiration=None,
+                priority=None,
+                badge=None,
+                category=None,
+                display_in_foreground=None,
+                channel_id=None,
+                subtitle=None,
+                mutable_content=None,
+            )
         )
         logger.info("%s sent to %s", response, expo_push_token)
     except Exception as e:
@@ -67,7 +71,8 @@ def send_due_date_notifications():
 
     """
     tasks = Task.objects.filter(
-        end_date__date=timezone.now().date() + timezone.timedelta(days=1))
+        end_date__date=timezone.now().date() + timezone.timedelta(days=1)
+    )
     for task in tasks:
         subject = "Task due soon"
         message = f"The task {task.name} is due tomorrow"

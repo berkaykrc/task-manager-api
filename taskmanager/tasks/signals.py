@@ -1,8 +1,8 @@
 """
 Signals for the tasks app
 
-This module contains signal handlers for the tasks app in a Django project. 
-Signals are used to perform certain actions when certain events occur in the application, 
+This module contains signal handlers for the tasks app in a Django project.
+Signals are used to perform certain actions when certain events occur in the application,
 such as when a new task is created or when a user is mentioned in a task.
 
 Attributes:
@@ -54,5 +54,4 @@ def send_notification_on_mention(instance, created, **_kwargs):
         message = f"You have been mentioned in the task {instance.comment.task.name}"
         user = instance.mentioned_user
         if user.profile.expo_push_token:
-            send_notification.delay(
-                subject, message, user.profile.expo_push_token)
+            send_notification.delay(subject, message, user.profile.expo_push_token)

@@ -4,6 +4,7 @@ This module contains the viewset for managing tasks in the Task Manager API.
 The TaskViewSet class provides CRUD operations for tasks, along with additional actions
 such as assigning a task to a user.
 """
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
@@ -56,8 +57,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     ]
     filterset_fields = ["priority", "status", "shared_files"]
     search_fields = ["name", "description", "priority", "status"]
-    ordering_fields = ["priority", "status",
-                       "end_date", "duration", "created_at"]
+    ordering_fields = ["priority", "status", "end_date", "duration", "created_at"]
     ordering = [
         "priority",
     ]
@@ -80,7 +80,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         try:
             instance.duration
         except ValidationError:
-            return response.Response({"error": "Invalid duration"}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(
+                {"error": "Invalid duration"}, status=status.HTTP_400_BAD_REQUEST
+            )
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
 
@@ -101,14 +103,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         try:
             user = get_user_model().objects.get(pk=user_id)
         except get_user_model().DoesNotExist:
-            return response.Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        if request.user not in task.project.users.all() and request.user != task.project.owner:
-            return response.Response({"error": "User is not a member of the project or owner"},
-                                     status=status.HTTP_403_FORBIDDEN)
+            return response.Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        if (
+            request.user not in task.project.users.all()
+            and request.user != task.project.owner
+        ):
+            return response.Response(
+                {"error": "User is not a member of the project or owner"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         task.assigned.add(user)
         task.save()
-        return response.Response({
-            "response": f"Task assigned to {user.get_username()}"}, status=200)
+        return response.Response(
+            {"response": f"Task assigned to {user.get_username()}"}, status=200
+        )
 
     @decorators.action(detail=True, methods=["post", "put"])
     def remove_user_from_task(self, request, pk=None):
@@ -126,22 +136,35 @@ class TaskViewSet(viewsets.ModelViewSet):
         user_id = request.data.get("user_id")
 
         if not user_id:
-            return response.Response({"error": "User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(
+                {"error": "User ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             user = get_user_model().objects.get(pk=user_id)
         except get_user_model().DoesNotExist:
-            return response.Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return response.Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except ValueError:
-            return response.Response({"error": "Invalid user ID"}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(
+                {"error": "Invalid user ID"}, status=status.HTTP_400_BAD_REQUEST
+            )
         if user not in task.assigned.all():
-            return response.Response({"error": "User is not assigned to the task"}, status=status.HTTP_404_NOT_FOUND)
+            return response.Response(
+                {"error": "User is not assigned to the task"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         task.assigned.remove(user)
         task.save()
-        return response.Response({
-            "response": f"User {user.get_username()} removed from the task"}, status=status.HTTP_200_OK)
+        return response.Response(
+            {"response": f"User {user.get_username()} removed from the task"},
+            status=status.HTTP_200_OK,
+        )
 
-    @ decorators.action(detail=True, methods=["patch"], url_path=r"comments/(?P<comment_id>\\d+)")
+    @decorators.action(
+        detail=True, methods=["patch"], url_path=r"comments/(?P<comment_id>\\d+)"
+    )
     def update_comment(self, request, _pk=None, comment_id=None):
         """
         Updates a comment for a task.
@@ -159,8 +182,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             comment = task.comments.get(id=comment_id)
         except Comment.DoesNotExist:
             return response.Response({"error": "Comment not found"}, status=404)
-        serializer = CommentUpdateSerializer(
-            comment, data=request.data, partial=True)
+        serializer = CommentUpdateSerializer(comment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return response.Response(serializer.data)
@@ -180,7 +202,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         """
         project_url = self.request.data.get("project")
         # Extract the project ID from the URL string
-        project_id = project_url.rstrip('/').split('/')[-1]
+        project_id = project_url.rstrip("/").split("/")[-1]
         project = Project.objects.get(pk=project_id)
         if self.request.user not in {project.owner, *project.users.all()}:
             raise ValidationError("You are not a member of this project")

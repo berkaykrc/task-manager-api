@@ -1,8 +1,8 @@
 """
 This module contains the Project model for the task manager API.
 
-The Project model represents a project in the task manager. 
-It has attributes such as name, description, start_date, end_date, and users. 
+The Project model represents a project in the task manager.
+It has attributes such as name, description, start_date, end_date, and users.
 It also includes validation functions for start_date and end_date.
 """
 
@@ -57,12 +57,13 @@ class Project(models.Model):
     start_date = models.DateTimeField(validators=[validate_start_date])
     end_date = models.DateTimeField(validators=[validate_end_date])
     users = models.ManyToManyField(
-        get_user_model(), related_name="projects", blank=True)
+        get_user_model(), related_name="projects", blank=True
+    )
     owner = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
         related_name="owned_projects",
-        null=True
+        null=True,
     )
 
     def __str__(self):

@@ -6,6 +6,7 @@ Attributes:
     name (str): App name
 
 """
+
 from django.apps import AppConfig
 
 
@@ -27,4 +28,5 @@ class TasksConfig(AppConfig):
         Returns:
             None
         """
-        import tasks.signals
+        # importing tasks.signals to register the signals
+        import tasks.signals  # noqa: F401

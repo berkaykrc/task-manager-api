@@ -1,6 +1,7 @@
 """
 This module contains the serializers for the SharedFile model.
 """
+
 from rest_framework import serializers
 
 from .models import SharedFile
@@ -21,10 +22,11 @@ class SharedFileSerializer(serializers.HyperlinkedModelSerializer):
         project (ForeignKey): The project associated with the shared file.
         task (ForeignKey): The task associated with the shared file.
     """
+
     uploaded_by = serializers.HyperlinkedRelatedField(
-        view_name="user-detail", read_only=True)
+        view_name="user-detail", read_only=True
+    )
 
     class Meta:
         model = SharedFile
-        fields = ["url", "file", "uploaded_at",
-                  "uploaded_by", "project", "task"]
+        fields = ["url", "file", "uploaded_at", "uploaded_by", "project", "task"]

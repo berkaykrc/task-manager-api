@@ -41,7 +41,7 @@ class TaskViewSetTestCase(APITestCase):
             description="Test Description",
             start_date=timezone.now() + timezone.timedelta(days=1),
             end_date=timezone.now() + timezone.timedelta(days=2),
-            owner=self.owner
+            owner=self.owner,
         )
         self.project.users.add(self.member)
         self.task = Task.objects.create(
@@ -70,7 +70,8 @@ class TaskViewSetTestCase(APITestCase):
         Test the assign task functionality.
         """
         response = self.client.post(
-            f"/tasks/{self.task.pk}/assign_task/", {"user_id": self.non_member.pk})
+            f"/tasks/{self.task.pk}/assign_task/", {"user_id": self.non_member.pk}
+        )
         self.task.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(self.non_member, self.task.assigned.all())
@@ -88,7 +89,7 @@ class TaskViewSetTestCase(APITestCase):
                 "status": "TODO",
                 "start_date": timezone.now() + timezone.timedelta(days=1),
                 "end_date": timezone.now() + timezone.timedelta(days=2),
-                "assigned": reverse('user-detail', args=[self.member.pk]),
+                "assigned": reverse("user-detail", args=[self.member.pk]),
                 "creator": self.owner.pk,
                 "project": reverse("project-detail", args=[self.project.pk]),
             },
@@ -121,7 +122,9 @@ class TaskViewSetTestCase(APITestCase):
         """
         self.task.assigned.add(self.non_member)
         response = self.client.post(
-            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": self.non_member.pk})
+            f"/tasks/{self.task.pk}/remove_user_from_task/",
+            {"user_id": self.non_member.pk},
+        )
         self.task.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn(self.non_member, self.task.assigned.all())
@@ -131,7 +134,8 @@ class TaskViewSetTestCase(APITestCase):
         Test the remove user from task functionality with validation error.
         """
         response = self.client.post(
-            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": "invalid"})
+            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": "invalid"}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_remove_user_from_task_non_existent_user(self):
@@ -139,7 +143,8 @@ class TaskViewSetTestCase(APITestCase):
         Test the remove user from task functionality with a non-existent user.
         """
         response = self.client.post(
-            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": 1000})
+            f"/tasks/{self.task.pk}/remove_user_from_task/", {"user_id": 1000}
+        )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def tearDown(self):
@@ -163,14 +168,14 @@ class SendueDateNotificationTestCase(TestCase):
         self.member = User.objects.create_user(
             username="member_user", password="testpassword"
         )
-        self.member.profile.expo_push_token = 'ExponentPushToken[yyyyyyyyyyyyyyyyyyyy]'
+        self.member.profile.expo_push_token = "ExponentPushToken[yyyyyyyyyyyyyyyyyyyy]"
         self.member.profile.save()
         self.project = Project.objects.create(
             name="Test Project",
             description="Test Description",
             start_date=timezone.now() + timezone.timedelta(days=1),
             end_date=timezone.now() + timezone.timedelta(days=2),
-            owner=self.owner
+            owner=self.owner,
         )
         self.project.users.add(self.member)
         self.task = Task.objects.create(
@@ -186,7 +191,7 @@ class SendueDateNotificationTestCase(TestCase):
         self.task.assigned.add(self.member)
         self.client.force_login(user=self.owner)
 
-    @patch('tasks.tasks.send_notification.delay')
+    @patch("tasks.tasks.send_notification.delay")
     def test_send_due_date_notifications(self, mock_send_notification):
         """
         Test that the send_due_date_notifications task sends a notification to a user
@@ -197,7 +202,7 @@ class SendueDateNotificationTestCase(TestCase):
         mock_send_notification.assert_called_with(
             "Task due soon",
             "The task Test Task is due tomorrow",
-            self.member.profile.expo_push_token
+            self.member.profile.expo_push_token,
         )
 
 
@@ -213,14 +218,14 @@ class SendNotificationOnMentionTestCase(TestCase):
         self.member = User.objects.create_user(
             username="member_user", password="testpassword"
         )
-        self.member.profile.expo_push_token = 'ExponentPushToken[yyyyyyyyyyyyyyyyyyyy]'
+        self.member.profile.expo_push_token = "ExponentPushToken[yyyyyyyyyyyyyyyyyyyy]"
         self.member.profile.save()
         self.project = Project.objects.create(
             name="Test Project",
             description="Test Description",
             start_date=timezone.now() + timezone.timedelta(days=1),
             end_date=timezone.now() + timezone.timedelta(days=2),
-            owner=self.owner
+            owner=self.owner,
         )
         self.project.users.add(self.member)
         self.task = Task.objects.create(
@@ -235,31 +240,27 @@ class SendNotificationOnMentionTestCase(TestCase):
         )
         self.task.assigned.add(self.member)
         self.comment = Comment.objects.create(
-            content="Test comment @member_user",
-            creator=self.owner,
-            task=self.task
+            content="Test comment @member_user", creator=self.owner, task=self.task
         )
         self.mention = Mention.objects.create(
-            mentioned_user=self.member,
-            comment=self.comment
+            mentioned_user=self.member, comment=self.comment
         )
         self.client.force_login(user=self.owner)
 
-    @patch('tasks.tasks.send_notification.delay')
+    @patch("tasks.tasks.send_notification.delay")
     def test_send_notification_on_mention(self, mock_send_notification):
         """
         Test that the send_notification_on_mention task sends a notification to a user
         when they are mentioned in a comment.
         """
         self.mention = Mention.objects.create(
-            mentioned_user=self.member,
-            comment=self.comment
+            mentioned_user=self.member, comment=self.comment
         )
 
         mock_send_notification.assert_called_with(
             "You have been mentioned",
             f"You have been mentioned in the task {self.task.name}",
-            self.member.profile.expo_push_token
+            self.member.profile.expo_push_token,
         )
 
 
@@ -384,7 +385,7 @@ class TaskSerializerAPITestCase(APITestCase):
         Test the validate_assigned method with members of the project.
         """
         task_data = {
-            "assigned": reverse('user-detail', args=[self.user2.pk]),
+            "assigned": reverse("user-detail", args=[self.user2.pk]),
         }
         response = self.client.patch(f"/tasks/{self.task.pk}/", task_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -396,10 +397,8 @@ class TaskSerializerAPITestCase(APITestCase):
         task_data = {
             "assigned": [self.user_outside.pk],
         }
-        response = self.client.patch(
-            f"/tasks/{self.task.pk}/", task_data)
-        self.assertEqual(response.status_code,
-                         status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch(f"/tasks/{self.task.pk}/", task_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class CommentModelTest(APITestCase):
@@ -451,7 +450,8 @@ class CommentViewSetTest(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser", password="testpassword")
+            username="testuser", password="testpassword"
+        )
         self.project = Project.objects.create(
             name="Test Project",
             description="Test Description",
@@ -472,7 +472,8 @@ class CommentViewSetTest(APITestCase):
         )
         self.task.assigned.add(self.user)
         self.comment = Comment.objects.create(
-            content="Test comment", creator=self.user, task=self.task)
+            content="Test comment", creator=self.user, task=self.task
+        )
         self.client.force_authenticate(user=self.user)
 
     def test_create_comment(self):
@@ -491,10 +492,12 @@ class CommentViewSetTest(APITestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Mention.objects.filter(
-            mentioned_user=mentioned_user).exists())
-        self.assertTrue(Comment.objects.filter(
-            content=comment_content, creator=self.user, task=self.task).exists())
+        self.assertTrue(Mention.objects.filter(mentioned_user=mentioned_user).exists())
+        self.assertTrue(
+            Comment.objects.filter(
+                content=comment_content, creator=self.user, task=self.task
+            ).exists()
+        )
 
     def test_non_project_member_cannot_create_comment(self):
         """
@@ -502,7 +505,8 @@ class CommentViewSetTest(APITestCase):
         """
 
         non_member_user = User.objects.create_user(
-            username="non_member_user", password="testpassword")
+            username="non_member_user", password="testpassword"
+        )
 
         self.client.force_authenticate(user=non_member_user)
 
@@ -512,7 +516,7 @@ class CommentViewSetTest(APITestCase):
                 "content": "New Comment",
                 "creator": non_member_user.pk,
                 "task": self.task.pk,
-                "mentions": [self.user.pk]
+                "mentions": [self.user.pk],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -533,14 +537,13 @@ class CommentViewSetTest(APITestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Mention.objects.filter(
-            mentioned_user=mentioned_user).exists())
+        self.assertTrue(Mention.objects.filter(mentioned_user=mentioned_user).exists())
 
     def test_delete_comment_and_associated_mentions(self):
         """
         Test that when a comment is deleted, all associated mentions are also deleted.
         """
-        response = self.client.delete(f'/tasks/comments/{self.comment.pk}/')
+        response = self.client.delete(f"/tasks/comments/{self.comment.pk}/")
         self.assertEqual(response.status_code, 204)
         self.assertFalse(Comment.objects.filter(pk=self.comment.pk).exists())
 
@@ -552,7 +555,8 @@ class MentionViewSetTest(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser", password="testpassword")
+            username="testuser", password="testpassword"
+        )
         self.project = Project.objects.create(
             name="Test Project",
             description="Test Description",
@@ -572,9 +576,11 @@ class MentionViewSetTest(APITestCase):
             project=self.project,
         )
         self.comment = Comment.objects.create(
-            content="Test comment @testuser", creator=self.user, task=self.task)
+            content="Test comment @testuser", creator=self.user, task=self.task
+        )
         self.mention = Mention.objects.create(
-            mentioned_user=self.user, comment=self.comment)
+            mentioned_user=self.user, comment=self.comment
+        )
         self.client.force_authenticate(user=self.user)
 
     def test_multiple_mentions_in_comment(self):
@@ -596,10 +602,8 @@ class MentionViewSetTest(APITestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Mention.objects.filter(
-            mentioned_user=mentioned_user1).exists())
-        self.assertTrue(Mention.objects.filter(
-            mentioned_user=mentioned_user2).exists())
+        self.assertTrue(Mention.objects.filter(mentioned_user=mentioned_user1).exists())
+        self.assertTrue(Mention.objects.filter(mentioned_user=mentioned_user2).exists())
 
     def test_mention_non_existent_user(self):
         """
@@ -615,34 +619,41 @@ class MentionViewSetTest(APITestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertFalse(Mention.objects.filter(
-            mentioned_user__username="non_existent_user").exists())
+        self.assertFalse(
+            Mention.objects.filter(
+                mentioned_user__username="non_existent_user"
+            ).exists()
+        )
 
     def test_mention_without_at_symbol(self):
         """
         Test that mentions without the @ symbol are not saved.
         """
         mentioned_user = User.objects.create_user(
-            username="user1", password="testpassword")
+            username="user1", password="testpassword"
+        )
         comment_content = "Hello user1"
         response = self.client.post(
-            '/tasks/comments/', {'task': self.task.pk, 'content': comment_content, 'creator': self.user.pk})
+            "/tasks/comments/",
+            {"task": self.task.pk, "content": comment_content, "creator": self.user.pk},
+        )
         self.assertEqual(response.status_code, 201)
-        self.assertFalse(Mention.objects.filter(
-            mentioned_user=mentioned_user).exists())
+        self.assertFalse(Mention.objects.filter(mentioned_user=mentioned_user).exists())
 
     def test_mention_in_middle_of_word(self):
         """
         Test that mentions in the middle of a word are not saved.
         """
         mentioned_user = User.objects.create_user(
-            username="user1", password="testpassword")
+            username="user1", password="testpassword"
+        )
         comment_content = "Hello @user1world"
         response = self.client.post(
-            '/tasks/comments/', {'task': self.task.pk, 'content': comment_content, 'creator': self.user.pk})
+            "/tasks/comments/",
+            {"task": self.task.pk, "content": comment_content, "creator": self.user.pk},
+        )
         self.assertEqual(response.status_code, 201)
-        self.assertFalse(Mention.objects.filter(
-            mentioned_user=mentioned_user).exists())
+        self.assertFalse(Mention.objects.filter(mentioned_user=mentioned_user).exists())
 
     def test_mentioned_user_can_view_mention(self):
         """
@@ -656,7 +667,8 @@ class MentionViewSetTest(APITestCase):
         Test that the mentioned user can edit the mention.
         """
         response = self.client.patch(
-            f'/tasks/mentions/{self.mention.pk}/', {'comment': 'Updated comment'})
+            f"/tasks/mentions/{self.mention.pk}/", {"comment": "Updated comment"}
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_non_mentioned_user_cannot_view_mention(self):
@@ -664,9 +676,10 @@ class MentionViewSetTest(APITestCase):
         Test that a non-mentioned user cannot view a mention.
         """
         non_mentioned_user = User.objects.create_user(
-            username='non_mentioned_user', password='testpassword')
+            username="non_mentioned_user", password="testpassword"
+        )
         self.client.force_authenticate(user=non_mentioned_user)
-        response = self.client.get(f'/tasks/mentions/{self.mention.pk}/')
+        response = self.client.get(f"/tasks/mentions/{self.mention.pk}/")
         self.assertEqual(response.status_code, 403)
 
     def test_non_mentioned_user_cannot_edit_mention(self):
@@ -674,17 +687,19 @@ class MentionViewSetTest(APITestCase):
         Test that a non-mentioned user cannot edit a mention.
         """
         non_mentioned_user = User.objects.create_user(
-            username='non_mentioned_user', password='testpassword')
+            username="non_mentioned_user", password="testpassword"
+        )
         self.client.force_authenticate(user=non_mentioned_user)
         response = self.client.patch(
-            f'/tasks/mentions/{self.mention.pk}/', {'comment': 'Updated comment'})
+            f"/tasks/mentions/{self.mention.pk}/", {"comment": "Updated comment"}
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_delete_comment_and_associated_mentions(self):
         """
         Test that when a comment is deleted, all associated mentions are also deleted.
         """
-        response = self.client.delete(f'/tasks/comments/{self.comment.pk}/')
+        response = self.client.delete(f"/tasks/comments/{self.comment.pk}/")
         self.assertEqual(response.status_code, 204)
         self.assertFalse(Comment.objects.filter(pk=self.comment.pk).exists())
         self.assertFalse(Mention.objects.filter(pk=self.mention.pk).exists())

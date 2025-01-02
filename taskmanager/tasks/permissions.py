@@ -9,6 +9,7 @@ Classes:
     - IsMentionedUser: Custom permission class that allows only the mentioned user to view and edit mentions associated with the user.
     - IsProjectMember: Custom permission class that allows only project members to view and edit comments associated with the project.
 """
+
 from rest_framework import permissions
 
 from .models import Comment, Mention, Task
@@ -76,7 +77,10 @@ class IsProjectMemberOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        return obj.project.owner == request.user or obj.project.users.filter(pk=request.user.pk).exists()
+        return (
+            obj.project.owner == request.user
+            or obj.project.users.filter(pk=request.user.pk).exists()
+        )
 
 
 class IsMentionedUser(permissions.BasePermission):
@@ -130,7 +134,10 @@ class IsProjectMember(permissions.BasePermission):
             bool: True if the user has permission, False otherwise.
         """
         if isinstance(obj, Comment):
-            return obj.creator == request.user or obj.task.project.users.filter(pk=request.user.pk).exists()
+            return (
+                obj.creator == request.user
+                or obj.task.project.users.filter(pk=request.user.pk).exists()
+            )
         return False
 
     def has_permission(self, request, view):
@@ -145,11 +152,14 @@ class IsProjectMember(permissions.BasePermission):
             bool: True if the user has permission, False otherwise.
         """
         if request.method == "POST":
-            task_id = request.data.get('task')
+            task_id = request.data.get("task")
             if task_id is not None:
                 try:
                     task = Task.objects.get(pk=task_id)
-                    return task.project.users.filter(pk=request.user.pk).exists() or task.project.owner == request.user
+                    return (
+                        task.project.users.filter(pk=request.user.pk).exists()
+                        or task.project.owner == request.user
+                    )
                 except Task.DoesNotExist:
                     return False
         return True

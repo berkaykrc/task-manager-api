@@ -10,7 +10,7 @@ Function views
     2. Add a URL to urlpatterns:  path('', views.home, name='home')
 Class-based views
     1. Add an import:  from profiles.views import ProfileViewSet
-    2. Add a URL to urlpatterns:  
+    2. Add a URL to urlpatterns:
         path('profiles/', ProfileViewSet.as_view({'get': 'list'}), name='profiles-list')
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
@@ -39,18 +39,19 @@ urlpatterns = [
     path("profiles/", include("profiles.urls")),
     path("projects/", include("projects.urls")),
     path("files/", include("files.urls")),
-    path('password/reset/',
-         PasswordResetView.as_view(), name='password_reset'),
-    path('password-reset-confirm/<uidb64>/<token>/',
-         PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path("password/reset/", PasswordResetView.as_view(), name="password_reset"),
+    path(
+        "password-reset-confirm/<uidb64>/<token>/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
     path("api-auth/", include("dj_rest_auth.urls")),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL,
-                          document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if not settings.TESTING:
     urlpatterns = [

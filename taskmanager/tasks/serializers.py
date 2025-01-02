@@ -56,6 +56,7 @@ class CommentUpdateSerializer(serializers.ModelSerializer):
     and vice versa. It specifies the fields to be included in the
     serialized representation of a Comment object.
     """
+
     class Meta:
         """
         Meta class for defining metadata options for the CommentSerializer class.
@@ -64,6 +65,7 @@ class CommentUpdateSerializer(serializers.ModelSerializer):
             model (class): The model
             fields (list): The list of fields to include in serialized representation of the model.
         """
+
         model = Comment
         fields = ["content"]
 
@@ -149,12 +151,11 @@ class CommentSerializer(serializers.ModelSerializer):
         for username in mentions:
             try:
                 user = get_user_model().objects.get(username=username)
-                Mention.objects.get_or_create(
-                    mentioned_user=user, comment=instance)
+                Mention.objects.get_or_create(mentioned_user=user, comment=instance)
             except get_user_model().DoesNotExist:
                 pass
         for mention in instance.mentions.all():
-            if '@' + mention.mentioned_user.username not in mentions:
+            if "@" + mention.mentioned_user.username not in mentions:
                 mention.delete()
         return instance
 
@@ -173,6 +174,7 @@ class CommentReadSerializer(CommentSerializer):
     Inherits:
         CommentSerializer: Base serializer class for the Comment model.
     """
+
     class Meta(CommentSerializer.Meta):
         """
         Meta class for defining metadata options for the CommentReadSerializer class.
@@ -181,6 +183,7 @@ class CommentReadSerializer(CommentSerializer):
             model (class): The model class to be serialized.
             fields (list): The list of fields to include in the serialized representation of the model.
         """
+
         fields = CommentSerializer.Meta.fields + ["mentions"]
 
 
@@ -199,9 +202,11 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
         validate: Custom validation method to ensure that the start_date is before the end_date.
 
     """
+
     comments = CommentSerializer(many=True, read_only=True)
     creator = serializers.HyperlinkedRelatedField(
-        view_name="user-detail", read_only=True)
+        view_name="user-detail", read_only=True
+    )
 
     class Meta:
         """
@@ -271,8 +276,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
         start_date = attrs.get("start_date")
         end_date = attrs.get("end_date")
         if start_date and end_date and start_date > end_date:
-            raise serializers.ValidationError(
-                "end_date must be after start_date")
+            raise serializers.ValidationError("end_date must be after start_date")
         return attrs
 
     def validate_assigned(self, value):
@@ -288,22 +292,22 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
         Raises:
             serializers.ValidationError: If any user is not a member of the project.
         """
-        project_url = self.context.get('request').data.get('project', None)
+        project_url = self.context.get("request").data.get("project", None)
         project = None
 
         if project_url:
-            project_id = project_url.rstrip('/').split('/')[-1]
+            project_id = project_url.rstrip("/").split("/")[-1]
             project = get_object_or_404(Project, id=project_id)
-        elif self.instance and hasattr(self.instance, 'project'):
+        elif self.instance and hasattr(self.instance, "project"):
             project = self.instance.project
 
         if not project:
             raise serializers.ValidationError(
-                "The task must be associated with a project.")
+                "The task must be associated with a project."
+            )
 
         for user in value:
             if user not in project.users.all():
-                raise serializers.ValidationError(
-                    "User is not a member of the project")
+                raise serializers.ValidationError("User is not a member of the project")
 
         return value

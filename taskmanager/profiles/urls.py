@@ -6,6 +6,7 @@ This file has the URLs for the Profiles app.
 Attributes:
     urlpatterns (list): The URLs for the Profiles app.
 """
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

@@ -56,14 +56,17 @@ class ProjectViewSetTestCase(APITestCase):
         and checks if the response status code is 201 (Created)
         and if the returned project name matches the expected value.
         """
-        response = self.client.post("/projects/",
-                                    {"name": "Test Project 2",
-                                     "description": "Test Description",
-                                     "start_date": timezone.now() + timezone.timedelta(days=1),
-                                     "end_date": timezone.now() + timezone.timedelta(days=2),
-                                     "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                                     "tasks": reverse("task-detail", kwargs={"pk": self.task.id})
-                                     })
+        response = self.client.post(
+            "/projects/",
+            {
+                "name": "Test Project 2",
+                "description": "Test Description",
+                "start_date": timezone.now() + timezone.timedelta(days=1),
+                "end_date": timezone.now() + timezone.timedelta(days=2),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["name"], "Test Project 2")
 
@@ -74,14 +77,17 @@ class ProjectViewSetTestCase(APITestCase):
         This method sends a POST request to the "/projects/" endpoint with a project
         that has a past start date and checks if the response status code is 400 (Bad Request).
         """
-        response = self.client.post("/projects/",
-                                    {"name": "Test Project 2",
-                                     "description": "Test Description",
-                                     "start_date": timezone.now() - timezone.timedelta(days=1),
-                                     "end_date": timezone.now() + timezone.timedelta(days=2),
-                                     "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                                     "tasks": reverse("task-detail", kwargs={"pk": self.task.id})
-                                     })
+        response = self.client.post(
+            "/projects/",
+            {
+                "name": "Test Project 2",
+                "description": "Test Description",
+                "start_date": timezone.now() - timezone.timedelta(days=1),
+                "end_date": timezone.now() + timezone.timedelta(days=2),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("start_date", response.data)
 
@@ -92,14 +98,17 @@ class ProjectViewSetTestCase(APITestCase):
         This method sends a POST request to the "/projects/" endpoint with a project
         that has a past end date and checks if the response status code is 400 (Bad Request).
         """
-        response = self.client.post("/projects/",
-                                    {"name": "Test Project 2",
-                                     "description": "Test Description",
-                                     "start_date": timezone.now() + timezone.timedelta(days=1),
-                                     "end_date": timezone.now() - timezone.timedelta(days=1),
-                                     "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                                     "tasks": reverse("task-detail", kwargs={"pk": self.task.id})
-                                     })
+        response = self.client.post(
+            "/projects/",
+            {
+                "name": "Test Project 2",
+                "description": "Test Description",
+                "start_date": timezone.now() + timezone.timedelta(days=1),
+                "end_date": timezone.now() - timezone.timedelta(days=1),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("end_date", response.data)
 
@@ -120,11 +129,11 @@ class ProjectViewSetTestCase(APITestCase):
         """Test that a project cannot be created where end_date < start_date."""
         with self.assertRaises(IntegrityError):
             Project.objects.create(
-                name='Another Test Project',
-                description='Another description',
+                name="Another Test Project",
+                description="Another description",
                 owner=self.user,
                 start_date=timezone.now(),
-                end_date=timezone.now() - timezone.timedelta(days=1)
+                end_date=timezone.now() - timezone.timedelta(days=1),
             )
 
     def test_get_all_projects(self):
@@ -137,8 +146,8 @@ class ProjectViewSetTestCase(APITestCase):
         """
         response = self.client.get("/projects/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['name'], "Test Project")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["name"], "Test Project")
 
     def test_retrieve_project(self):
         """
@@ -160,14 +169,17 @@ class ProjectViewSetTestCase(APITestCase):
         and checks if the response status code is 200 (OK)
         and if the returned project name matches the expected value.
         """
-        response = self.client.put(f"/projects/{self.project.id}/",
-                                   {"name": "Updated Project",
-                                    "description": "Test Description",
-                                    "start_date": timezone.now() + timezone.timedelta(days=5),
-                                    "end_date": timezone.now() + timezone.timedelta(days=10),
-                                    "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                                    "tasks": reverse("task-detail", kwargs={"pk": self.task.id})
-                                    })
+        response = self.client.put(
+            f"/projects/{self.project.id}/",
+            {
+                "name": "Updated Project",
+                "description": "Test Description",
+                "start_date": timezone.now() + timezone.timedelta(days=5),
+                "end_date": timezone.now() + timezone.timedelta(days=10),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Updated Project")
 
