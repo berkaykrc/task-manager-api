@@ -15,7 +15,7 @@ from pathlib import Path
 
 import environ
 
-env = environ.Env()
+env = environ.Env(CSP_REPORT_URI=(str, None))
 environ.Env.read_env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -84,35 +84,45 @@ TESTING = "test" in sys.argv
 
 WSGI_APPLICATION = "taskamanager.wsgi.application"
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
-            "style": "{",
+if TESTING:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+    }
+else:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+                "style": "{",
+            },
+            "simple": {
+                "format": "{levelname} {message}",
+                "style": "{",
+            },
         },
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "simple",
+                "level": "DEBUG",
+            },
         },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-            "level": "DEBUG",
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": True,
-        },
-    },
-
-}
+        "loggers": {
+            "django": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
+            "taskmanager.profiles.management.commands.create_user": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
+        }
+    }
 
 DATABASES = {
 }
@@ -207,7 +217,7 @@ CSP_FONT_SRC = (
     "https://cdn.jsdelivr.net",
 )
 
-CSP_REPORT_URI = env("CSP_REPORT_URI", default="")
+CSP_REPORT_URI = env("CSP_REPORT_URI")
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
