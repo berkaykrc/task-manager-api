@@ -27,7 +27,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer_class (Serializer): The serializer class for the Project model.
     """
 
-    queryset = Project.objects.all().prefetch_related(
-        'tasks', 'users', 'shared_files').select_related('owner').order_by('id')
+    queryset = (
+        Project.objects.all()
+        .prefetch_related("tasks", "users", "shared_files")
+        .select_related("owner")
+        .order_by("id")
+    )
     serializer_class = ProjectSerializer
     permission_classes = [IsProjectOwnerOrReadOnly]

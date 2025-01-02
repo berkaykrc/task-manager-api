@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 import os
 import sys
 from pathlib import Path
@@ -86,8 +87,8 @@ WSGI_APPLICATION = "taskamanager.wsgi.application"
 
 if TESTING:
     LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': True,
+        "version": 1,
+        "disable_existing_loggers": True,
     }
 else:
     LOGGING = {
@@ -121,11 +122,10 @@ else:
                 "level": "DEBUG",
                 "propagate": True,
             },
-        }
+        },
     }
 
-DATABASES = {
-}
+DATABASES = {}
 
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [

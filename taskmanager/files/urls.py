@@ -1,8 +1,8 @@
 """
 URLs for the files app.
 
-This module defines the URLs for the files app in the Task Manager API. 
-It includes a router for handling file-related endpoints and 
+This module defines the URLs for the files app in the Task Manager API.
+It includes a router for handling file-related endpoints and
 registers the SharedFileViewSet as the viewset for the "files" endpoint.
 
 Example usage:

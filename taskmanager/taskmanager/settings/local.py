@@ -1,4 +1,5 @@
-from .base import *
+from .base import *  # noqa F403
+# ruff : noqa : F405
 
 DEBUG = True
 CELERY_TASK_ALWAYS_EAGER = True
@@ -51,8 +52,8 @@ WSGI_APPLICATION = "taskmanager.wsgi.application"
 
 if TESTING:
     LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': True,
+        "version": 1,
+        "disable_existing_loggers": True,
     }
 else:
     LOGGING["handlers"]["console"]["formatter"] = "verbose"

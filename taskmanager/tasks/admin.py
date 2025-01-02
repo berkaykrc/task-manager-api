@@ -7,12 +7,14 @@ from .models import Comment, Mention, Task
 
 class CommentInline(admin.TabularInline):
     """Inline class for displaying comments in the Task admin view."""
+
     model = Comment
     extra = 0
 
 
 class TaskInline(admin.TabularInline):
     """Inline class for displaying tasks in the Project admin view."""
+
     model = Task
     extra = 0
 

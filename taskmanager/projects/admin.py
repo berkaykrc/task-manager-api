@@ -24,11 +24,11 @@ class ProjectAdmin(admin.ModelAdmin):
 
     """
 
-    list_display = ('name', 'description', 'start_date', 'end_date', 'owner')
-    list_filter = ('start_date', 'end_date')
-    search_fields = ['name', 'description']
+    list_display = ("name", "description", "start_date", "end_date", "owner")
+    list_filter = ("start_date", "end_date")
+    search_fields = ["name", "description"]
     inlines = [TaskInline, SharedFilesInline]
-    filter_horizontal = ('users',)
+    filter_horizontal = ("users",)
 
 
 admin.site.register(Project, ProjectAdmin)

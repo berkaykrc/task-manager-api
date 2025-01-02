@@ -1,6 +1,7 @@
 """
 App configuration for the 'projects' app.
 """
+
 from django.apps import AppConfig
 
 
@@ -15,5 +16,6 @@ class ProjectsConfig(AppConfig):
         default_auto_field (str): The default auto field to use for models in the app.
         name (str): The name of the app.
     """
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'projects'
+
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "projects"

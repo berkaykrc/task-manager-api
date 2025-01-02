@@ -1,14 +1,14 @@
 """
-This module defines the GraphQL schema for the profiles app. 
+This module defines the GraphQL schema for the profiles app.
 It includes the definition of the `ProfileType`, `UserType`, and `Query` classes.
 
-The `ProfileType` class represents a user profile in the GraphQL schema. 
+The `ProfileType` class represents a user profile in the GraphQL schema.
 It defines the fields and behavior of the profile type.
 
-The `UserType` class represents a user in the GraphQL schema. 
+The `UserType` class represents a user in the GraphQL schema.
 It inherits from `DjangoObjectType` and includes a `profile` field of type `ProfileType`.
 
-The `Query` class defines the queries that can be made on the `UserType`. 
+The `Query` class defines the queries that can be made on the `UserType`.
 It includes a `resolve_all_users` method that returns all users in the system.
 """
 

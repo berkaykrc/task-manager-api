@@ -3,6 +3,7 @@ This module defines the models and validation functions for handling shared file
 in the task manager application. It includes validation for file extensions, content,
 and size to ensure that only appropriate files are uploaded.
 """
+
 import os
 
 from django.contrib.auth import get_user_model
@@ -28,16 +29,17 @@ def validate_file_extension_and_content(value):
         ValidationError: If the file extension or content is not allowed.
     """
     ext = os.path.splitext(value.name)[1]
-    valid_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt']
-    if not ext.lower() in valid_extensions:
+    valid_extensions = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"]
+    if ext.lower() not in valid_extensions:
         raise ValidationError(
-            f'Unsupported file extension. Allowed extensions are: {", ".join(valid_extensions)}.')
+            f'Unsupported file extension. Allowed extensions are: {", ".join(valid_extensions)}.'
+        )
 
     valid_content_types = {
-        b'%PDF': 'application/pdf',
-        b'\xD0\xCF\x11\xE0': 'application/msword',
-        b'PK\x03\x04': 'application/vnd.openxmlformats-officedocument',
-        b'\x0A\x00\x00': 'application/vnd.ms-excel',
+        b"%PDF": "application/pdf",
+        b"\xd0\xcf\x11\xe0": "application/msword",
+        b"PK\x03\x04": "application/vnd.openxmlformats-officedocument",
+        b"\x0a\x00\x00": "application/vnd.ms-excel",
     }
 
     # Read the first few bytes of the file
@@ -46,10 +48,12 @@ def validate_file_extension_and_content(value):
 
     # Check if the file header matches any of the valid content types
     content_type = next(
-        (ct for key, ct in valid_content_types.items() if file_head.startswith(key)), None)
+        (ct for key, ct in valid_content_types.items() if file_head.startswith(key)),
+        None,
+    )
 
-    if content_type is None and ext != '.txt':  # Special case for .txt files
-        raise ValidationError('Unsupported file type.')
+    if content_type is None and ext != ".txt":  # Special case for .txt files
+        raise ValidationError("Unsupported file type.")
 
 
 def validate_file_size(value):
@@ -63,8 +67,7 @@ def validate_file_size(value):
         ValidationError: If the file size exceeds the limit.
     """
     if value.size > MAX_FILE_SIZE:
-        raise ValidationError(
-            f'File size should not exceed {MAX_FILE_SIZE} MB.')
+        raise ValidationError(f"File size should not exceed {MAX_FILE_SIZE} MB.")
 
 
 class SharedFile(models.Model):
@@ -78,16 +81,23 @@ class SharedFile(models.Model):
         project (ForeignKey): The project associated with the file.
         task (ForeignKey): The task associated with the file (optional).
     """
+
     file = models.FileField(
-        upload_to='shared_files/',
-        validators=[validate_file_extension_and_content, validate_file_size]
+        upload_to="shared_files/",
+        validators=[validate_file_extension_and_content, validate_file_size],
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name='shared_files')
-    task = models.ForeignKey(Task, on_delete=models.CASCADE,
-                             null=True, blank=True, related_name='shared_files')
+        Project, on_delete=models.CASCADE, related_name="shared_files"
+    )
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="shared_files",
+    )
 
     def __str__(self):
         return self.file.name

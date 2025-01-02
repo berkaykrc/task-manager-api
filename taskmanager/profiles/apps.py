@@ -3,6 +3,7 @@ Profiles app.
 
 This file contains the Profiles app configuration.
 """
+
 from django.apps import AppConfig
 
 

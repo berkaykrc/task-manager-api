@@ -8,7 +8,6 @@ Attributes:
     save_user_profile (function): Save the profile when the user is saved.
 """
 
-
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
