@@ -11,6 +11,8 @@ Functions:
     validate_end_date: A function that validates the end date of a task.
 """
 
+from typing import TYPE_CHECKING, Any
+
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -18,7 +20,8 @@ from django.db import models
 from django.utils import timezone
 from projects.models import Project
 
-User = get_user_model()
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
 
 
 def validate_start_date(value):
@@ -91,9 +94,11 @@ class Task(models.Model):
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="TODO")
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
-    assigned = models.ManyToManyField(User, related_name="tasks")
+    assigned: "models.ManyToManyField[User, Any]" = models.ManyToManyField(
+        get_user_model(), related_name="tasks"
+    )
     creator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="created_tasks"
+        get_user_model(), on_delete=models.CASCADE, related_name="created_tasks"
     )
 
     class Meta:
@@ -163,15 +168,17 @@ class Comment(models.Model):
     """
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    creator = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="comments"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
 
     def __str__(self) -> str:
         """
-        Returns:
-            str: The content of the comment.
-        """
+                Returns:
+                    str: The content of the comment.
+        User"""
         return str(self.content)
 
 
@@ -189,7 +196,7 @@ class Mention(models.Model):
         Comment, on_delete=models.CASCADE, related_name="mentions"
     )
     mentioned_user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="mentions"
+        get_user_model(), on_delete=models.CASCADE, related_name="mentions"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

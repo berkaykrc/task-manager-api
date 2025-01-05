@@ -30,14 +30,26 @@ faker = "^33.1.0"
 django-debug-toolbar = "^4.4.6"
 django-environ = "0.11.2"
 ruff = "^0.8.5"
+django-stubs = {extras = ["compatible-mypy"], version = "^5.1.1"}
+djangorestframework-stubs = {extras = ["compatible-mypy"], version = "^3.15.2"}
+celery-types = "^0.22.0"
 
 [tool.ruff]
 exclude=[
     "migrations",
 ]
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]   
+mypy_path = "taskmanager"
+ignore_missing_imports = true
+exclude = 'migrations'
+
+[tool.django-stubs]
+django_settings_module = "taskmanager.settings.local"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-##TODO: mypy typing

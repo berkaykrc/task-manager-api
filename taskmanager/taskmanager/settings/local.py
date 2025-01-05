@@ -51,10 +51,7 @@ TEMPLATES += [
 WSGI_APPLICATION = "taskmanager.wsgi.application"
 
 if TESTING:
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": True,
-    }
+    LOGGING["disable_existing_loggers"] = True
 else:
     LOGGING["handlers"]["console"]["formatter"] = "verbose"
     LOGGING["loggers"]["django"]["level"] = "INFO"

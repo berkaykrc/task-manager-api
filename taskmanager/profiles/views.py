@@ -3,7 +3,6 @@
 from dj_rest_auth.views import LoginView as DjRestAuthLoginView
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from profiles.permissions import IsAdminUserOrReadOnly, IsUserOrReadOnly
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -12,6 +11,8 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from profiles.permissions import IsAdminUserOrReadOnly, IsUserOrReadOnly
 
 from .models import Profile
 from .serializers import (

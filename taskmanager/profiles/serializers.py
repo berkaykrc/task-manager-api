@@ -37,7 +37,7 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
             output.
     """
 
-    image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True)
+    image = serializers.ImageField(max_length=100, allow_empty_file=True, use_url=True)
 
     class Meta:
         model = Profile
@@ -86,12 +86,12 @@ class UserSerializer(serializers.ModelSerializer):
         get_image(obj): Return the URL of the user's image.
     """
 
-    tasks = serializers.HyperlinkedRelatedField(
+    tasks: serializers.RelatedField = serializers.HyperlinkedRelatedField(
         many=True, read_only=True, view_name="task-detail"
     )
     image = serializers.SerializerMethodField()
     groups = GroupSerializer(many=True)
-    projects = serializers.HyperlinkedRelatedField(
+    projects: serializers.RelatedField = serializers.HyperlinkedRelatedField(
         many=True, view_name="project-detail", read_only=True
     )
 

@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import environ
 
@@ -24,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 INSTALLED_APPS = [
@@ -60,7 +61,7 @@ MIDDLEWARE = [
     "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGINS: list[str] = []
 
 EMAIL_BACKEND = ""
 
@@ -69,22 +70,22 @@ ROOT_URLCONF = "taskmanager.urls"
 CELERY_BROKER_URL = env("REDIS_URL")
 CELERY_TASK_ALWAYS_EAGER = False
 
-INTERNAL_IPS = []
+INTERNAL_IPS: list[str] = []
 
 ROOT_URLCONF = "taskmanager.urls"
 LOGIN_REDIRECT_URL = "api-root"
 LOGOUT_REDIRECT_URL = "api-root"
 
 MEDIA_URL = ""
-MEDIA_ROOT = ""
+MEDIA_ROOT: Path
 
-TEMPLATES = []
+TEMPLATES: list[dict] = []
 
 TESTING = "test" in sys.argv
 
 
 WSGI_APPLICATION = "taskamanager.wsgi.application"
-
+LOGGING: dict[str, Any]
 if TESTING:
     LOGGING = {
         "version": 1,
@@ -125,7 +126,7 @@ else:
         },
     }
 
-DATABASES = {}
+DATABASES: dict[str, dict[str, Any]] = {}
 
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [

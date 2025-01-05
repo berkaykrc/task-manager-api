@@ -11,6 +11,7 @@ from django.utils import timezone
 from projects.models import Project
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from tasks.tasks import send_due_date_notifications
 
 from .models import Comment, Mention, Task

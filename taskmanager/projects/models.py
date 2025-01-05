@@ -6,10 +6,15 @@ It has attributes such as name, description, start_date, end_date, and users.
 It also includes validation functions for start_date and end_date.
 """
 
+from typing import TYPE_CHECKING, Any
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
 
 
 def validate_start_date(value):
@@ -56,7 +61,7 @@ class Project(models.Model):
     description = models.TextField(blank=True)
     start_date = models.DateTimeField(validators=[validate_start_date])
     end_date = models.DateTimeField(validators=[validate_end_date])
-    users = models.ManyToManyField(
+    users: "models.ManyToManyField[User, Any]" = models.ManyToManyField(
         get_user_model(), related_name="projects", blank=True
     )
     owner = models.ForeignKey(

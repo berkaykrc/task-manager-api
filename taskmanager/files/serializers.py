@@ -23,7 +23,7 @@ class SharedFileSerializer(serializers.HyperlinkedModelSerializer):
         task (ForeignKey): The task associated with the shared file.
     """
 
-    uploaded_by = serializers.HyperlinkedRelatedField(
+    uploaded_by: serializers.RelatedField = serializers.HyperlinkedRelatedField(
         view_name="user-detail", read_only=True
     )
 

@@ -11,10 +11,11 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.urls import reverse
 from django.utils import timezone
-from projects.models import Project
 from rest_framework import status
 from rest_framework.test import APITestCase
 from tasks.models import Task
+
+from projects.models import Project
 
 User = get_user_model()
 

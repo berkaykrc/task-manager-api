@@ -8,19 +8,23 @@ Tasks:
 """
 
 import logging
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Optional
 
 from celery import shared_task
 from django.core.management import call_command
-from django.utils import timezone
 from exponent_server_sdk import PushClient, PushMessage
 
 from .models import Task
 
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from profiles.models import Profile
+
 
 @shared_task
-def send_notification(subject, message, expo_push_token):
+def send_notification(subject: str, message: str, expo_push_token: str) -> None:
     """
     Sends a notification to the specified Expo push token.
 
@@ -59,7 +63,7 @@ def send_notification(subject, message, expo_push_token):
 
 
 @shared_task
-def send_due_date_notifications():
+def send_due_date_notifications() -> None:
     """
     Sends notifications to users with tasks due tomorrow.
 
@@ -71,13 +75,15 @@ def send_due_date_notifications():
 
     """
     tasks = Task.objects.filter(
-        end_date__date=timezone.now().date() + timezone.timedelta(days=1)
+        end_date__date=datetime.now().date() + timedelta(days=1)
     )
     for task in tasks:
         subject = "Task due soon"
         message = f"The task {task.name} is due tomorrow"
         for user in task.assigned.all():
-            expo_push_token = user.profile.expo_push_token
+            # HACK it doesnt help to recognize the type of user.profile
+            profile: Profile = user.profile
+            expo_push_token: Optional[str] = getattr(profile, "expo_push_token", None)
             if expo_push_token:
                 send_notification.delay(subject, message, expo_push_token)
 

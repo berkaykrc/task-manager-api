@@ -187,7 +187,7 @@ class CommentReadSerializer(CommentSerializer):
         fields = CommentSerializer.Meta.fields + ["mentions"]
 
 
-class TaskSerializer(serializers.HyperlinkedModelSerializer):
+class TaskSerializer(serializers.HyperlinkedModelSerializer[Task]):
     """
     Serializer class for the Task model.
 
@@ -204,7 +204,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     comments = CommentSerializer(many=True, read_only=True)
-    creator = serializers.HyperlinkedRelatedField(
+    creator: serializers.RelatedField = serializers.HyperlinkedRelatedField(
         view_name="user-detail", read_only=True
     )
 

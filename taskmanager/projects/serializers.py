@@ -29,10 +29,12 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         fields (list): The fields that should be included in the serialized output.
     """
 
-    users = serializers.HyperlinkedRelatedField(
+    users: serializers.RelatedField = serializers.HyperlinkedRelatedField(
         many=True, view_name="user-detail", read_only=True
     )
-    owner = serializers.HyperlinkedRelatedField(view_name="user-detail", read_only=True)
+    owner: serializers.RelatedField = serializers.HyperlinkedRelatedField(
+        view_name="user-detail", read_only=True
+    )
 
     class Meta:
         """

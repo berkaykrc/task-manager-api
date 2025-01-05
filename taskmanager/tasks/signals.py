@@ -17,6 +17,7 @@ Raises:
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from tasks.tasks import send_notification
 
 from .models import Mention, Task
