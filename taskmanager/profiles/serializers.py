@@ -11,8 +11,10 @@ Attributes:
     GroupSerializer: Group serializer.
 """
 
+from typing import Any
+
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from rest_framework import serializers
 
 from .models import Profile
@@ -37,7 +39,7 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
             output.
     """
 
-    image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True)
+    image = serializers.ImageField(max_length=100, allow_empty_file=True, use_url=True)
 
     class Meta:
         model = Profile
@@ -64,7 +66,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         fields = ["name", "permissions"]
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer[AbstractUser]):
     """
     Serializer for the User model.
 
@@ -86,20 +88,24 @@ class UserSerializer(serializers.ModelSerializer):
         get_image(obj): Return the URL of the user's image.
     """
 
-    tasks = serializers.HyperlinkedRelatedField(
-        many=True, read_only=True, view_name="task-detail"
+    tasks: serializers.RelatedField | serializers.ManyRelatedField = (
+        serializers.HyperlinkedRelatedField(
+            many=True, read_only=True, view_name="task-detail"
+        )
     )
     image = serializers.SerializerMethodField()
     groups = GroupSerializer(many=True)
-    projects = serializers.HyperlinkedRelatedField(
-        many=True, view_name="project-detail", read_only=True
+    projects: serializers.RelatedField | serializers.ManyRelatedField = (
+        serializers.HyperlinkedRelatedField(
+            many=True, view_name="project-detail", read_only=True
+        )
     )
 
     class Meta:
         model = get_user_model()
         fields = ["username", "email", "image", "tasks", "groups", "projects"]
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, Any]) -> AbstractUser:
         groups_data = validated_data.pop("groups")
         user = get_user_model().objects.create(**validated_data)
         for group_data in groups_data:
@@ -107,7 +113,9 @@ class UserSerializer(serializers.ModelSerializer):
             user.groups.add(group)
         return user
 
-    def update(self, instance, validated_data):
+    def update(
+        self, instance: AbstractUser, validated_data: dict[str, Any]
+    ) -> AbstractUser:
         groups_data = validated_data.pop("groups")
         instance.groups.clear()
         for group_data in groups_data:
@@ -115,7 +123,7 @@ class UserSerializer(serializers.ModelSerializer):
             instance.groups.add(group)
         return super().update(instance, validated_data)
 
-    def get_image(self, obj):
+    def get_image(self, obj: AbstractUser) -> str | None:
         """
         Return the URL of the user's image.
 
@@ -126,7 +134,7 @@ class UserSerializer(serializers.ModelSerializer):
             str: The URL of the user's image.
 
         """
-        return obj.profile.image.url if obj.profile and obj.profile.image else None
+        return obj.profile.image.url if obj.profile and obj.profile.image else None  # type: ignore
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

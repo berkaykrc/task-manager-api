@@ -12,6 +12,7 @@ The `Query` class defines the queries that can be made on the `UserType`.
 It includes a `resolve_all_users` method that returns all users in the system.
 """
 
+# pyright: reportMissingImports=false
 import graphene
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied

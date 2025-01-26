@@ -18,7 +18,10 @@ Including another URLconf
 """
 
 from debug_toolbar.toolbar import debug_toolbar_urls
-from dj_rest_auth.views import PasswordResetConfirmView, PasswordResetView
+from dj_rest_auth.views import (
+    PasswordResetConfirmView,
+    PasswordResetView,
+)
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin

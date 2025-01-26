@@ -11,6 +11,8 @@ Functions:
     validate_end_date: A function that validates the end date of a task.
 """
 
+from datetime import datetime
+
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -18,10 +20,8 @@ from django.db import models
 from django.utils import timezone
 from projects.models import Project
 
-User = get_user_model()
 
-
-def validate_start_date(value):
+def validate_start_date(value: datetime) -> None:
     """
     Function that validates the start date of a task.
 
@@ -35,7 +35,7 @@ def validate_start_date(value):
         raise ValidationError("Start date cannot be in the past")
 
 
-def validate_end_date(value):
+def validate_end_date(value: datetime) -> None:
     """
     Function that validates the end date of a task.
 
@@ -91,9 +91,11 @@ class Task(models.Model):
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="TODO")
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
-    assigned = models.ManyToManyField(User, related_name="tasks")
+    assigned: models.ManyToManyField = models.ManyToManyField(
+        get_user_model(), related_name="tasks"
+    )
     creator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="created_tasks"
+        get_user_model(), on_delete=models.CASCADE, related_name="created_tasks"
     )
 
     class Meta:
@@ -121,7 +123,7 @@ class Task(models.Model):
         ordering="start_date",
         description="Is the task overdue?",
     )
-    def duration(self):
+    def duration(self) -> str:
         """
         Calculates the duration of the task.
 
@@ -135,7 +137,7 @@ class Task(models.Model):
         """
         if self.start_date and self.end_date:
             duration = self.end_date - self.start_date
-            if duration.total_seconds() < 0:
+            if duration.total_seconds() <= 0:
                 return "Error: End date is earlier than start date"
             total_seconds = int(duration.total_seconds())
             hours, remainder = divmod(total_seconds, 3600)
@@ -163,7 +165,9 @@ class Comment(models.Model):
     """
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    creator = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="comments"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
 
@@ -189,7 +193,7 @@ class Mention(models.Model):
         Comment, on_delete=models.CASCADE, related_name="mentions"
     )
     mentioned_user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="mentions"
+        get_user_model(), on_delete=models.CASCADE, related_name="mentions"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

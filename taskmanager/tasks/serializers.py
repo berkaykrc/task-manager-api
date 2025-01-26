@@ -13,8 +13,10 @@ Classes:
 """
 
 import re
+from typing import Any
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
@@ -41,7 +43,7 @@ class MentionSerializer(serializers.ModelSerializer):
 
         model = Mention
         fields = [
-            "id",
+            "pk",
             "mentioned_user",
             "created_at",
         ]
@@ -96,7 +98,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = [
             "url",
-            "id",
+            "pk",
             "task",
             "created_at",
             "creator",
@@ -104,7 +106,7 @@ class CommentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["created_at", "creator"]
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, Any]) -> Comment:
         """
         Creates a new comment instance.
 
@@ -128,7 +130,7 @@ class CommentSerializer(serializers.ModelSerializer):
                 pass
         return comment
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Comment, validated_data: dict) -> Comment:
         """
         Updates an existing comment instance.
 
@@ -187,7 +189,7 @@ class CommentReadSerializer(CommentSerializer):
         fields = CommentSerializer.Meta.fields + ["mentions"]
 
 
-class TaskSerializer(serializers.HyperlinkedModelSerializer):
+class TaskSerializer(serializers.HyperlinkedModelSerializer[Task]):
     """
     Serializer class for the Task model.
 
@@ -204,7 +206,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     comments = CommentSerializer(many=True, read_only=True)
-    creator = serializers.HyperlinkedRelatedField(
+    creator: serializers.RelatedField = serializers.HyperlinkedRelatedField(
         view_name="user-detail", read_only=True
     )
 
@@ -220,7 +222,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
         model = Task
         fields = [
             "url",
-            "id",
+            "pk",
             "creator",
             "name",
             "description",
@@ -237,7 +239,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
 
         read_only_fields = ["creator"]
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Task, validated_data: dict[str, Any]) -> Task:
         """
         Updates an existing task instance.
 
@@ -259,7 +261,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
             validated_data.pop("assigned")
         return super().update(instance, validated_data)
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         """
         Custom validation method to ensure that the start_date is before the end_date.
 
@@ -279,25 +281,26 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError("end_date must be after start_date")
         return attrs
 
-    def validate_assigned(self, value):
+    def validate_assigned(self, value: list[AbstractUser]) -> list[AbstractUser]:
         """
         Validates that all users in the list are members of the project.
 
         Args:
-            value (list): List of users assigned to the task.
+            value (list[User]): List of users assigned to the task.
 
         Returns:
-            list: The validated list of users.
+            list[User]: The validated list of users.
 
         Raises:
             serializers.ValidationError: If any user is not a member of the project.
         """
-        project_url = self.context.get("request").data.get("project", None)
+        request = self.context.get("request", None)
+        project_url = request.data.get("project", None) if request else None
         project = None
 
         if project_url:
             project_id = project_url.rstrip("/").split("/")[-1]
-            project = get_object_or_404(Project, id=project_id)
+            project = get_object_or_404(Project, pk=project_id)
         elif self.instance and hasattr(self.instance, "project"):
             project = self.instance.project
 

@@ -31,7 +31,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Project.objects.all()
         .prefetch_related("tasks", "users", "shared_files")
         .select_related("owner")
-        .order_by("id")
+        .order_by("pk")
     )
     serializer_class = ProjectSerializer
     permission_classes = [IsProjectOwnerOrReadOnly]

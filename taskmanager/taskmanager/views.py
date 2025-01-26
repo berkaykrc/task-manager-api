@@ -10,6 +10,7 @@ Methods:
     get: Gets the API root.
 """
 
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
@@ -27,14 +28,13 @@ class APIRootView(APIView):
         get: Gets the API root.
     """
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         """Gets the API root.
 
         This method gets the API root.
 
         Args:
             request (Request): The request.
-            format (str): The format.
 
         Returns:
             Response: The response.

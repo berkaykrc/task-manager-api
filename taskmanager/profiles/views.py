@@ -1,17 +1,21 @@
 """Profiles views."""
 
-from dj_rest_auth.views import LoginView as DjRestAuthLoginView
+from typing import Any
+
+from dj_rest_auth.views import LoginView as DjRestAuthLoginView  # type: ignore
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from profiles.permissions import IsAdminUserOrReadOnly, IsUserOrReadOnly
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication  # type: ignore
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from profiles.permissions import IsAdminUserOrReadOnly, IsUserOrReadOnly
 
 from .models import Profile
 from .serializers import (
@@ -30,25 +34,23 @@ class ProfileViewSet(viewsets.ModelViewSet):
     Requires authentication and permission to access.
     """
 
-    queryset = Profile.objects.all().order_by("id")
+    queryset = Profile.objects.all().order_by("pk")
     serializer_class = ProfileSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsUserOrReadOnly, IsAuthenticated]
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Destroy a profile.
 
         Args:
-            request: HTTP request.
-            *args: Additional arguments.
-            **kwargs: Additional keyword arguments.
+            request: HTTPRequest.
         Returns:
-            Response: The http response indicating the result of the operation.
+            Response: The HttpResponse indicating the result of the operation.
         """
-        instance = self.get_object()
-        profile_id = instance.id
-        user_id = instance.user.id
+        instance: Profile = self.get_object()
+        profile_id = instance.pk
+        user_id = instance.user.pk
         self.perform_destroy(instance)
         return Response(
             {
@@ -59,29 +61,27 @@ class ProfileViewSet(viewsets.ModelViewSet):
             status=status.HTTP_204_NO_CONTENT,
         )
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance: Profile) -> None:
         """
         Perform the destroy operation.
 
         Args:
-            instance: The profile instance to be deleted.
+            instance: The Profile instance to be deleted.
         """
         instance.delete()
 
     @action(detail=True, methods=["patch"])
-    def set_expo_push_token(self, request):
+    def set_expo_push_token(self, request: Request, pk: int | None = None) -> Response:
         """
         Set the Expo push token for a profile.
 
         Args:
             request: HTTP request.
-            pk: The profile ID.
-
         Returns:
             Response object.
         """
-        profile = self.get_object()
-        expo_push_token = request.data.get("expo_push_token")
+        profile: Profile = self.get_object()
+        expo_push_token: str | None = request.data.get("expo_push_token")
 
         if not expo_push_token:
             return Response(
@@ -104,7 +104,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     Inherits from `viewsets.ReadOnlyModelViewSet` and provides read-only actions for users.
     """
 
-    queryset = get_user_model().objects.all().order_by("id")
+    queryset = get_user_model().objects.all().order_by("pk")
     serializer_class = UserSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUserOrReadOnly, IsAuthenticated]
@@ -117,7 +117,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     Inherits from `viewsets.ModelViewSet` and provides CRUD actions for groups.
     """
 
-    queryset = Group.objects.all().order_by("id")
+    queryset = Group.objects.all().order_by("pk")
     serializer_class = GroupSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUser]
@@ -132,12 +132,12 @@ class RegisterView(APIView):
     Returns a response with the created user's refresh and access tokens if successful.
     """
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """
         Register a user.
 
         Args:
-            request: HTTP request.
+            request: HTTPRequest.
 
         Returns:
             Response object.

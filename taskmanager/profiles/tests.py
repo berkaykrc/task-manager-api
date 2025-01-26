@@ -109,7 +109,7 @@ class ProfileViewSetTestCase(APITestCase):
             None.
         """
         profile = self.user.profile
-        response = self.client.get(f"/profiles/{profile.id}/")
+        response = self.client.get(f"/profiles/{profile.pk}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue("image" in response.data)
         self.assertTrue("user" in response.data)
@@ -147,7 +147,7 @@ class ProfileViewSetTestCase(APITestCase):
             "expo_push_token": "test_token",
         }
         response = self.client.put(
-            f"/profiles/{self.user.profile.id}/", data, format="multipart"
+            f"/profiles/{self.user.profile.pk}/", data, format="multipart"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Profile.objects.filter(user=self.user).exists())
@@ -166,7 +166,7 @@ class ProfileViewSetTestCase(APITestCase):
         """
         data = {"expo_push_token": "test_token"}
         response = self.client.patch(
-            f"/profiles/{self.user.profile.id}/", data, format="json"
+            f"/profiles/{self.user.profile.pk}/", data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(
@@ -193,7 +193,7 @@ class ProfileViewSetTestCase(APITestCase):
             "expo_push_token": "test_token",
         }
         response = self.client.put(
-            f"/profiles/{self.user.profile.id}/", data, format="json"
+            f"/profiles/{self.user.profile.pk}/", data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -219,7 +219,7 @@ class ProfileViewSetTestCase(APITestCase):
             "expo_push_token": "test_token",
         }
         response = self.client.put(
-            f"/profiles/{other_user.profile.id}/", data, format="multipart"
+            f"/profiles/{other_user.profile.pk}/", data, format="multipart"
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -235,12 +235,12 @@ class ProfileViewSetTestCase(APITestCase):
         Returns:
             None.
         """
-        response = self.client.delete(f"/profiles/{self.user.profile.id}/")
+        response = self.client.delete(f"/profiles/{self.user.profile.pk}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Profile.objects.filter(user=self.user).exists())
         self.assertEqual(response.data["message"], "Profile deleted successfully.")
-        self.assertEqual(response.data["profile_id"], self.user.profile.id)
-        self.assertEqual(response.data["user_id"], self.user.id)
+        self.assertEqual(response.data["profile_id"], self.user.profile.pk)
+        self.assertEqual(response.data["user_id"], self.user.pk)
 
     def test_set_expo_push_token(self):
         """
@@ -256,7 +256,7 @@ class ProfileViewSetTestCase(APITestCase):
         """
         data = {"expo_push_token": "test_token"}
         response = self.client.patch(
-            f"/profiles/{self.user.profile.id}/", data, format="json"
+            f"/profiles/{self.user.profile.pk}/", data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(

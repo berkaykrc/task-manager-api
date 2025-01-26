@@ -11,7 +11,7 @@ from rest_framework import serializers
 from .models import Project
 
 
-class ProjectSerializer(serializers.HyperlinkedModelSerializer):
+class ProjectSerializer(serializers.HyperlinkedModelSerializer[Project]):
     """
     Serializer class for the Project model.
 
@@ -29,10 +29,14 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         fields (list): The fields that should be included in the serialized output.
     """
 
-    users = serializers.HyperlinkedRelatedField(
-        many=True, view_name="user-detail", read_only=True
+    users: serializers.RelatedField | serializers.ManyRelatedField = (
+        serializers.HyperlinkedRelatedField(
+            many=True, view_name="user-detail", read_only=True
+        )
     )
-    owner = serializers.HyperlinkedRelatedField(view_name="user-detail", read_only=True)
+    owner: serializers.RelatedField | serializers.ManyRelatedField = (
+        serializers.HyperlinkedRelatedField(view_name="user-detail", read_only=True)
+    )
 
     class Meta:
         """
@@ -42,7 +46,7 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         model = Project
         fields = [
             "url",
-            "id",
+            "pk",
             "name",
             "description",
             "start_date",

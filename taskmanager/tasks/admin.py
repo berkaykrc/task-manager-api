@@ -34,7 +34,7 @@ class TaskAdmin(admin.ModelAdmin):
         ordering (str): The field name to be used for ordering the list view.
 
     Methods:
-        display_assigned(obj): Returns a string representation of the assigned users.
+        display_assigned(obj): Returns a string representation of the assigned users to Task.
 
     """
 
@@ -53,11 +53,10 @@ class TaskAdmin(admin.ModelAdmin):
     ordering = ("-start_date",)
     inlines = [CommentInline]
 
-    def display_assigned(self, obj):
-        """Display assigned to users."""
-        return ", ".join([assigned.username for assigned in obj.assigned.all()])
-
-    display_assigned.short_description = "Assigned To"
+    @admin.display(description="Assigned To")
+    def display_assigned(self, obj: Task) -> str:
+        """Display users assigned to Task."""
+        return ", ".join(assigned.username for assigned in obj.assigned.all())
 
 
 admin.site.register(Task, TaskAdmin)

@@ -5,7 +5,7 @@ from argparse import ArgumentError
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import IntegrityError, transaction
 from faker import Faker
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 faker = Faker()
 
 
-def generate_random_string(length=10):
+def generate_random_string(length: int = 10) -> str:
     characters = string.ascii_letters + string.digits  # Letters and digits
     random_string = "".join(random.choice(characters) for _ in range(length))
     return random_string
@@ -24,7 +24,7 @@ def generate_random_string(length=10):
 class Command(BaseCommand):
     help = "Populate the database with sample data"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("count", type=int, help="The number of users to create")
 
     @transaction.atomic

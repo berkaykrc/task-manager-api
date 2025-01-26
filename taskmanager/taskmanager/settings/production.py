@@ -64,3 +64,6 @@ LOGGING["loggers"].update(
         },
     }
 )
+TEMPLATES = [
+    "django.template.backends.django.DjangoTemplates",
+]
