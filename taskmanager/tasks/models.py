@@ -11,7 +11,7 @@ Functions:
     validate_end_date: A function that validates the end date of a task.
 """
 
-from typing import TYPE_CHECKING, Any
+from datetime import datetime
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -20,11 +20,8 @@ from django.db import models
 from django.utils import timezone
 from projects.models import Project
 
-if TYPE_CHECKING:
-    from django.contrib.auth.models import User
 
-
-def validate_start_date(value):
+def validate_start_date(value: datetime) -> None:
     """
     Function that validates the start date of a task.
 
@@ -38,7 +35,7 @@ def validate_start_date(value):
         raise ValidationError("Start date cannot be in the past")
 
 
-def validate_end_date(value):
+def validate_end_date(value: datetime) -> None:
     """
     Function that validates the end date of a task.
 
@@ -94,7 +91,7 @@ class Task(models.Model):
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="TODO")
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
-    assigned: "models.ManyToManyField[User, Any]" = models.ManyToManyField(
+    assigned: models.ManyToManyField = models.ManyToManyField(
         get_user_model(), related_name="tasks"
     )
     creator = models.ForeignKey(
@@ -126,7 +123,7 @@ class Task(models.Model):
         ordering="start_date",
         description="Is the task overdue?",
     )
-    def duration(self):
+    def duration(self) -> str:
         """
         Calculates the duration of the task.
 
@@ -140,7 +137,7 @@ class Task(models.Model):
         """
         if self.start_date and self.end_date:
             duration = self.end_date - self.start_date
-            if duration.total_seconds() < 0:
+            if duration.total_seconds() <= 0:
                 return "Error: End date is earlier than start date"
             total_seconds = int(duration.total_seconds())
             hours, remainder = divmod(total_seconds, 3600)
@@ -176,9 +173,9 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         """
-                Returns:
-                    str: The content of the comment.
-        User"""
+        Returns:
+            str: The content of the comment.
+        """
         return str(self.content)
 
 

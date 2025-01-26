@@ -66,8 +66,8 @@ class FileTests(APITestCase):
     def test_create_sharedfile_success(self):
         """Test the creation of a new file."""
         data = {
-            "project": reverse("project-detail", args=[self.project.id]),
-            "task": reverse("task-detail", args=[self.task.id]),
+            "project": reverse("project-detail", args=[self.project.pk]),
+            "task": reverse("task-detail", args=[self.task.pk]),
             "file": self.initial_file,
             "uploaded_by": self.user,
         }
@@ -80,7 +80,7 @@ class FileTests(APITestCase):
     def test_create_sharedfile_without_task(self):
         """Test the creation of a new file without a task."""
         data = {
-            "project": reverse("project-detail", args=[self.project.id]),
+            "project": reverse("project-detail", args=[self.project.pk]),
             "file": self.initial_file,
             "uploaded_by": self.user,
         }
@@ -95,7 +95,7 @@ class FileTests(APITestCase):
         data = {
             "file": self.initial_file,
             "uploaded_by": self.user,
-            "task": reverse("task-detail", args=[self.task.id]),
+            "task": reverse("task-detail", args=[self.task.pk]),
         }
         response = self.client.post(reverse("sharedfile-list"), data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -105,10 +105,10 @@ class FileTests(APITestCase):
     def test_create_sharedfile_invalid_project(self):
         """Test the creation of a new file with an invalid project."""
         data = {
-            "project": reverse("project-detail", args=[self.project.id + 1]),
+            "project": reverse("project-detail", args=[self.project.pk + 1]),
             "file": self.initial_file,
             "uploaded_by": self.user,
-            "task": reverse("task-detail", args=[self.task.id]),
+            "task": reverse("task-detail", args=[self.task.pk]),
         }
         response = self.client.post(reverse("sharedfile-list"), data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -137,9 +137,9 @@ class FileTests(APITestCase):
         )
 
         data = {
-            "project": reverse("project-detail", args=[self.project.id]),
+            "project": reverse("project-detail", args=[self.project.pk]),
             # Task from different project
-            "task": reverse("task-detail", args=[new_task.id]),
+            "task": reverse("task-detail", args=[new_task.pk]),
             "file": self.initial_file,
         }
         response = self.client.post(reverse("sharedfile-list"), data)
@@ -152,7 +152,7 @@ class FileTests(APITestCase):
             file=self.initial_file.name + str(1),
             project=self.project,
         )
-        response = self.client.get(reverse("sharedfile-detail", args=[file.id]))
+        response = self.client.get(reverse("sharedfile-detail", args=[file.pk]))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("testfile.pdf", response.data["file"])
 
@@ -177,12 +177,12 @@ class FileTests(APITestCase):
             "textfile2.pdf", b"%PDF", content_type="application/pdf"
         )
         response = self.client.patch(
-            reverse("sharedfile-detail", args=[file.id]),
+            reverse("sharedfile-detail", args=[file.pk]),
             {"file": updated_file},
             format="multipart",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_file_instance = SharedFile.objects.get(id=file.id)
+        updated_file_instance = SharedFile.objects.get(pk=file.pk)
         self.assertTrue(updated_file_instance.file.name, "textfile2.txt")
 
     def test_file_deletion(self):
@@ -192,7 +192,7 @@ class FileTests(APITestCase):
             file=self.initial_file.name + str(1),
             project=self.project,
         )
-        response = self.client.delete(reverse("sharedfile-detail", args=[file.id]))
+        response = self.client.delete(reverse("sharedfile-detail", args=[file.pk]))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(SharedFile.objects.count(), 0)
 
@@ -206,7 +206,7 @@ class FileTests(APITestCase):
                 reverse("sharedfile-list"),
                 {
                     "file": f,
-                    "project": reverse("project-detail", args=[self.project.id]),
+                    "project": reverse("project-detail", args=[self.project.pk]),
                 },
                 format="multipart",
             )
@@ -225,7 +225,7 @@ class FileTests(APITestCase):
             reverse("sharedfile-list"),
             {
                 "file": invalid_file,
-                "project": reverse("project-detail", args=[self.project.id]),
+                "project": reverse("project-detail", args=[self.project.pk]),
             },
             format="multipart",
         )

@@ -4,10 +4,11 @@ in the task manager application. It includes validation for file extensions, con
 and size to ensure that only appropriate files are uploaded.
 """
 
-import os
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files import File
 from django.db import models
 from projects.models import Project
 from tasks.models import Task
@@ -15,10 +16,7 @@ from tasks.models import Task
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
-# fixme: update all typings.
-
-
-def validate_file_extension_and_content(value):
+def validate_file_extension_and_content(value: File):
     """
     Validates the file extension and content of the uploaded file.
 
@@ -28,7 +26,9 @@ def validate_file_extension_and_content(value):
     Raises:
         ValidationError: If the file extension or content is not allowed.
     """
-    ext = os.path.splitext(value.name)[1]
+    if not isinstance(value.name, str):
+        raise ValidationError("Invalid file name.")
+    ext = Path(value.name).suffix
     valid_extensions = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"]
     if ext.lower() not in valid_extensions:
         raise ValidationError(
@@ -56,7 +56,7 @@ def validate_file_extension_and_content(value):
         raise ValidationError("Unsupported file type.")
 
 
-def validate_file_size(value):
+def validate_file_size(value: File):
     """
     Validates the size of the uploaded file.
 
@@ -99,5 +99,5 @@ class SharedFile(models.Model):
         related_name="shared_files",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.file.name

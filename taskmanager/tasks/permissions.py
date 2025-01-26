@@ -11,6 +11,8 @@ Classes:
 """
 
 from rest_framework import permissions
+from rest_framework.request import Request
+from rest_framework.views import APIView
 
 from .models import Comment, Mention, Task
 
@@ -30,7 +32,7 @@ class IsCreatorOrReadOnly(permissions.BasePermission):
         has_object_permission(request, view, obj): Determines if the user has permission to perform the requested action on the object.
     """
 
-    def has_object_permission(self, request, _view, obj):
+    def has_object_permission(self, request: Request, view: APIView, obj: Task) -> bool:
         """
         Check if the user has permission to perform the requested action on the task object.
 
@@ -62,13 +64,13 @@ class IsProjectMemberOrReadOnly(permissions.BasePermission):
         has_object_permission(request, view, obj): Determines if the user has permission to perform the requested action on the object.
     """
 
-    def has_object_permission(self, request, _view, obj):
+    def has_object_permission(self, request: Request, view: APIView, obj: Task) -> bool:
         """
         Check if the user has permission to perform the requested action on the task object.
 
         Args:
-            request (HttpRequest): The request object.
-            view (View): The view object.
+            request (Request): The request object.
+            view (APIView): The view object.
             obj (Task): The task object.
 
         Returns:
@@ -98,13 +100,15 @@ class IsMentionedUser(permissions.BasePermission):
         has_object_permission(request, view, obj): Determines if the user has permission to perform the requested action on the object.
     """
 
-    def has_object_permission(self, request, _view, obj):
+    def has_object_permission(
+        self, request: Request, view: APIView, obj: Mention
+    ) -> bool:
         """
         Check if the user has permission to perform the requested action on the mention object.
 
         Args:
-            request (HttpRequest): The request object.
-            view (View): The view object.
+            request (Request): The request object.
+            view (APIView): The view object.
             obj (Mention): The mention object.
 
         Returns:
@@ -121,32 +125,36 @@ class IsProjectMember(permissions.BasePermission):
     Determines if the user has permission to access a project-related object.
     """
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(
+        self, request: Request, view: APIView, obj: Comment
+    ) -> bool:
         """
         Check if the user has permission to access the specified object.
-
         Args:
-            request (HttpRequest): The request being made.
-            view (View): The view handling the request.
-            obj (object): The object being accessed.
-
+            request (Request): The request being made.
+            view (APIView): The view handling the request.
+            obj (Comment): The object being accessed.
         Returns:
             bool: True if the user has permission, False otherwise.
         """
-        if isinstance(obj, Comment):
-            return (
-                obj.creator == request.user
-                or obj.task.project.users.filter(pk=request.user.pk).exists()
-            )
-        return False
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
-    def has_permission(self, request, view):
+        task = obj.task
+        project = task.project
+
+        return (
+            project.owner == request.user
+            or project.users.filter(pk=request.user.pk).exists()
+        )
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
         """
         Check if the user has permission to perform the specified action.
 
         Args:
-            request (HttpRequest): The request being made.
-            view (View): The view handling the request.
+            request (Request): The request being made.
+            view (APIView): The view handling the request.
 
         Returns:
             bool: True if the user has permission, False otherwise.

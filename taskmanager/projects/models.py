@@ -6,18 +6,15 @@ It has attributes such as name, description, start_date, end_date, and users.
 It also includes validation functions for start_date and end_date.
 """
 
-from typing import TYPE_CHECKING, Any
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-if TYPE_CHECKING:
-    from django.contrib.auth.models import User
 
-
-def validate_start_date(value):
+def validate_start_date(value: datetime) -> None:
     """
     Validates that the provided start date is not in the past.
 
@@ -31,7 +28,7 @@ def validate_start_date(value):
         raise ValidationError("Start date cannot be in the past.")
 
 
-def validate_end_date(value):
+def validate_end_date(value: datetime) -> None:
     """
     Validates that the provided end date is not in the past.
 
@@ -61,7 +58,7 @@ class Project(models.Model):
     description = models.TextField(blank=True)
     start_date = models.DateTimeField(validators=[validate_start_date])
     end_date = models.DateTimeField(validators=[validate_end_date])
-    users: "models.ManyToManyField[User, Any]" = models.ManyToManyField(
+    users: models.ManyToManyField = models.ManyToManyField(
         get_user_model(), related_name="projects", blank=True
     )
     owner = models.ForeignKey(
@@ -71,7 +68,7 @@ class Project(models.Model):
         null=True,
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}"
 
     class Meta:

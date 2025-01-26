@@ -64,8 +64,8 @@ class ProjectViewSetTestCase(APITestCase):
                 "description": "Test Description",
                 "start_date": timezone.now() + timezone.timedelta(days=1),
                 "end_date": timezone.now() + timezone.timedelta(days=2),
-                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.pk}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.pk}),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -85,8 +85,8 @@ class ProjectViewSetTestCase(APITestCase):
                 "description": "Test Description",
                 "start_date": timezone.now() - timezone.timedelta(days=1),
                 "end_date": timezone.now() + timezone.timedelta(days=2),
-                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.pk}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.pk}),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -106,8 +106,8 @@ class ProjectViewSetTestCase(APITestCase):
                 "description": "Test Description",
                 "start_date": timezone.now() + timezone.timedelta(days=1),
                 "end_date": timezone.now() - timezone.timedelta(days=1),
-                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.pk}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.pk}),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -158,7 +158,7 @@ class ProjectViewSetTestCase(APITestCase):
         status code is 200 (OK) and if the returned project name matches the expected value.
 
         """
-        response = self.client.get(f"/projects/{self.project.id}/")
+        response = self.client.get(f"/projects/{self.project.pk}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Project")
 
@@ -171,14 +171,14 @@ class ProjectViewSetTestCase(APITestCase):
         and if the returned project name matches the expected value.
         """
         response = self.client.put(
-            f"/projects/{self.project.id}/",
+            f"/projects/{self.project.pk}/",
             {
                 "name": "Updated Project",
                 "description": "Test Description",
                 "start_date": timezone.now() + timezone.timedelta(days=5),
                 "end_date": timezone.now() + timezone.timedelta(days=10),
-                "owner": reverse("user-detail", kwargs={"pk": self.user.id}),
-                "tasks": reverse("task-detail", kwargs={"pk": self.task.id}),
+                "owner": reverse("user-detail", kwargs={"pk": self.user.pk}),
+                "tasks": reverse("task-detail", kwargs={"pk": self.task.pk}),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -192,5 +192,5 @@ class ProjectViewSetTestCase(APITestCase):
         checks if the response status code is 204 (No Content).
 
         """
-        response = self.client.delete(f"/projects/{self.project.id}/")
+        response = self.client.delete(f"/projects/{self.project.pk}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

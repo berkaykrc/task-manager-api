@@ -12,7 +12,7 @@ Attributes:
 
 import os
 
-import environ
+import environ  # type: ignore
 from celery import Celery
 from celery.schedules import crontab
 
@@ -20,7 +20,7 @@ env = environ.Env()
 environ.Env.read_env()
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "taskmanager.settings.local")
 
-app = Celery("taskmanager", backend=env("REDIS_URL"), broker=env("REDIS_URL"))
+app: Celery = Celery("taskmanager", backend=env("REDIS_URL"), broker=env("REDIS_URL"))
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 

@@ -44,11 +44,26 @@ extend-select = ["I"]
 [tool.mypy]
 plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]   
 mypy_path = "taskmanager"
-ignore_missing_imports = true
 exclude = 'migrations'
+ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "taskmanager.settings.local"
+
+[tool.pyright]
+include = ["taskmanager"]
+exclude = ["**/node_modules",
+    "**/__pycache__",
+    "src/experimental",
+    "src/typestubs"
+]
+defineConstant = { DEBUG = true }
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+reportIncompatibleVariableOverride = "none"
+
+pythonVersion = "3.10"
+pythonPlatform = "Linux"
 
 [build-system]
 requires = ["poetry-core"]

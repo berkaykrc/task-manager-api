@@ -24,15 +24,16 @@ class SharedFileViewSet(viewsets.ModelViewSet):
     queryset = (
         SharedFile.objects.all()
         .prefetch_related("project", "task", "uploaded_by")
-        .order_by("id")
+        .order_by("pk")
     )
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
         """
         Perform create method for SharedFileViewSet.
 
         This method is called when a new SharedFile instance is created.
-        It sets the owner of the SharedFile to the current user.
+        It sets the owner of the SharedFile to the current user and ensures that the project and task are valid.
+
         """
         project = self.get_project()
         task = self.get_task()
@@ -44,18 +45,20 @@ class SharedFileViewSet(viewsets.ModelViewSet):
         except Exception as exc:
             raise ValidationError("An error occurred while creating the file.") from exc
 
-    def get_project(self):
+    def get_project(self) -> Project | None:
         """
         Get the project associated with the file.
 
         Returns:
-            Project: The project associated with the file.
+            Project | None : The project associated with the file.
         """
         project_url = self.request.data.get("project")
         if project_url:
             project_id = resolve(project_url).kwargs.get("pk")
+            if not project_id:
+                raise ValidationError("Inalid project URL")
             try:
-                project = Project.objects.get(id=project_id)
+                project = Project.objects.get(pk=project_id)
             except Project.DoesNotExist as exc:
                 raise ValidationError(
                     "There is no Project with this ID to relate to the file"
@@ -63,7 +66,7 @@ class SharedFileViewSet(viewsets.ModelViewSet):
             return project
         return None
 
-    def get_task(self):
+    def get_task(self) -> Task | None:
         """
         Get the task associated with the file.
 
@@ -73,8 +76,10 @@ class SharedFileViewSet(viewsets.ModelViewSet):
         task_url = self.request.data.get("task")
         if task_url:
             task_id = resolve(task_url).kwargs.get("pk")
+            if not task_id:
+                raise ValidationError("Invalid task URL")
             try:
-                task = Task.objects.get(id=task_id)
+                task = Task.objects.get(pk=task_id)
             except Task.DoesNotExist as exc:
                 raise ValidationError(
                     "There is no Task with this ID to relate to project"

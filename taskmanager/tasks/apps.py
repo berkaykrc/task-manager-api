@@ -21,7 +21,7 @@ class TasksConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "tasks"
 
-    def ready(self):
+    def ready(self) -> None:
         """
         Method called when the app is ready
 

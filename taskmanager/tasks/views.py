@@ -93,7 +93,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         Args:
             request (HttpRequest): The request object.
-            user_id (int): The ID of the user to assign the task to.
+            user_id (int): The pk of the user to assign the task to.
 
         Returns:
             HttpResponse: The response indicating the task has been assigned.
@@ -137,7 +137,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         if not user_id:
             return response.Response(
-                {"error": "User ID is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "User pk is required"}, status=status.HTTP_400_BAD_REQUEST
             )
         try:
             user = get_user_model().objects.get(pk=user_id)
@@ -147,7 +147,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             )
         except ValueError:
             return response.Response(
-                {"error": "Invalid user ID"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Invalid user pk"}, status=status.HTTP_400_BAD_REQUEST
             )
         if user not in task.assigned.all():
             return response.Response(
@@ -171,15 +171,15 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         Args:
             request (HttpRequest): The request object.
-            pk (int): The ID of the task.
-            comment_id (int): The ID of the comment to update.
+            pk (int): The pk of the task.
+            comment_id (int): The pk of the comment to update.
 
         Returns:
             HttpResponse: The response containing the updated comment data or an error message.
         """
         task = self.get_object()
         try:
-            comment = task.comments.get(id=comment_id)
+            comment = task.comments.get(pk=comment_id)
         except Comment.DoesNotExist:
             return response.Response({"error": "Comment not found"}, status=404)
         serializer = CommentUpdateSerializer(comment, data=request.data, partial=True)
@@ -201,7 +201,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             None
         """
         project_url = self.request.data.get("project")
-        # Extract the project ID from the URL string
+        # Extract the project pk from the URL string
         project_id = project_url.rstrip("/").split("/")[-1]
         project = Project.objects.get(pk=project_id)
         if self.request.user not in {project.owner, *project.users.all()}:

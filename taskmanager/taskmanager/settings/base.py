@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -20,15 +19,15 @@ import environ
 env = environ.Env(CSP_REPORT_URI=(str, None))
 environ.Env.read_env()
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = env("SECRET_KEY")
-DEBUG = False
+SECRET_KEY: str = env("SECRET_KEY")
+DEBUG: bool = False
 
 ALLOWED_HOSTS: list[str] = []
 
 
-INSTALLED_APPS = [
+INSTALLED_APPS: list[str] = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.admin",
@@ -47,7 +46,7 @@ INSTALLED_APPS = [
     "dj_rest_auth",
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE: list[str] = [
     "csp.middleware.CSPMiddleware",
     "django.middleware.cache.UpdateCacheMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -63,12 +62,12 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS: list[str] = []
 
-EMAIL_BACKEND = ""
+EMAIL_BACKEND: str
 
-ROOT_URLCONF = "taskmanager.urls"
+ROOT_URLCONF: str = "taskmanager.urls"
 
-CELERY_BROKER_URL = env("REDIS_URL")
-CELERY_TASK_ALWAYS_EAGER = False
+CELERY_BROKER_URL: str = env("REDIS_URL")
+CELERY_TASK_ALWAYS_EAGER: bool = False
 
 INTERNAL_IPS: list[str] = []
 
@@ -76,10 +75,10 @@ ROOT_URLCONF = "taskmanager.urls"
 LOGIN_REDIRECT_URL = "api-root"
 LOGOUT_REDIRECT_URL = "api-root"
 
-MEDIA_URL = ""
+MEDIA_URL: str
 MEDIA_ROOT: Path
 
-TEMPLATES: list[dict] = []
+TEMPLATES: list[dict[str, Any] | str] = []
 
 TESTING = "test" in sys.argv
 
@@ -126,7 +125,7 @@ else:
         },
     }
 
-DATABASES: dict[str, dict[str, Any]] = {}
+DATABASES: dict[str, dict[str, Any]]
 
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [
@@ -235,7 +234,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = BASE_DIR / "static"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
