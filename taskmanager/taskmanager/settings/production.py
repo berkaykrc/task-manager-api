@@ -64,6 +64,33 @@ LOGGING["loggers"].update(
         },
     }
 )
-TEMPLATES = [
-    "django.template.backends.django.DjangoTemplates",
+TEMPLATES += [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "APP_DIRS": False,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+            "loaders": [
+                (
+                    "django.template.loaders.cached.Loader",
+                    [
+                        "django.template.loaders.filesystem.Loader",
+                        "django.template.loaders.app_directories.Loader",
+                    ],
+                ),
+            ],
+        },
+    },
 ]
+SECURE_HSTS_SECONDS = 1800  # 30 minutes
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CONN_MAX_AGE = 60
+SECURE_SSL_REDIRECT = True

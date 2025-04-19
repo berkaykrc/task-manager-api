@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import environ
+import environ  # type: ignore
 
 env = environ.Env(CSP_REPORT_URI=(str, None))
 environ.Env.read_env()
